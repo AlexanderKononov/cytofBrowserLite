@@ -1,0 +1,56 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
+## cytofBrowser
+
+Description: The package focuses on analysis of CyTOF proteomic data. It is of the pipeline which starts from fcs files and goes to markers and cell type abundance correlation analysis through marker filtratio and cell clusterisation steps. Despite that, there are functions available for interactive R session, it is assumed that cytofBrowser are run with a graphical interface as R Shiny app GUI.
+
+## Installation
+
+Presently you can instal the develop version of this programme:
+
+``` r
+if (!requireNamespace("devtools", quietly = TRUE))
+    install.packages("devtools")
+    
+devtools::install_github("AlexanderKononov/cytofBrowser")
+```
+The current version of shinyFiles for windows is not stable. You should use the previous version of the package.
+``` r
+lin <- "https://cran.r-project.org/src/contrib/Archive/shinyFiles/shinyFiles_0.7.5.tar.gz"
+install.packages(lin, repos=NULL, type="source")
+```
+
+
+Complete list of dependencies is listed in the DESCRIPTION and in the file Library_louncher.R
+
+In a future, you can install the released version of cytofBrowser from [Bioconductor](https://www.bioconductor.org) with:
+
+``` r
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("cytofBrowser")
+```
+## Run the cytofBrowser
+
+I assumed that this programme will be used with GUI as Shiny App.
+
+``` r
+cytofBrowserGUI()
+```
+
+## Example
+
+This is a basic example which shows you how to run the cytofBrowser:
+
+```r
+library(cytofBrowser)
+```
+``` r
+cytofBrowserGUI()
+```
