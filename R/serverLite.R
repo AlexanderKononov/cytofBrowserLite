@@ -15,5 +15,7 @@
 #' @examples
 cytofBrowser_server <- function(input, output){
 
+  ##### Create "fcs_data" as reactive object to store the CyTOF data
+  fcs_data <-reactiveValues()
 
 }
