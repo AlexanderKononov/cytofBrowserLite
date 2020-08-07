@@ -16,8 +16,3 @@ was created with assumption that it will be run with GUI mode
 as Shiny App, That is why the function is the most appropriate
 way to use the cytofBrowser.
 }
-\examples{
-\dontrun{
-cytofBrowserGUI()
-}
-}

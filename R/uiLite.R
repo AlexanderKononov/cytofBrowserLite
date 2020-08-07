@@ -6,49 +6,89 @@
 #' way to use the cytofBrowser.
 #'
 #' @return The function runs the Shiny App in browser.
-#' @import shiny shinydashboard
+#' @import shiny shinyFiles shinydashboard shinyWidgets
 #' @export
 #'
-#' @examples
-#' \dontrun{
-#' cytofBrowserGUI()
-#' }
 cytofBrowserGUI <-function(){
-  cytofBrowser_ui <- dashboardPage(
-    dashboardHeader(title = "cytofBrowser"),
-    dashboardSidebar(
-      sidebarMenu(
-        menuItem("Data", tabName = 'data_processing', icon = icon("bars")),
-        menuItem("Gating", tabName = 'gating', icon = icon("door-open")),
-        menuItem("Exploration", tabName = 'data_exploration', icon = icon("chart-area")),
-        menuItem("Correlation", tabName = 'data_correlation', icon = icon("braille")),
-        menuItem("Cross-panel", tabName = 'data_crosspanel', icon = icon("clone"))
+  cytofBrowser_ui <- shinydashboard::dashboardPage(
+    shinydashboard::dashboardHeader(title = "cytofBrowser"),
+    shinydashboard::dashboardSidebar(
+      shinydashboard::sidebarMenu(
+        shinydashboard::menuItem("Data", tabName = 'data_processing', icon = icon("bars")),
+        shinydashboard::menuItem("Gating", tabName = 'gating', icon = icon("door-open")),
+        shinydashboard::menuItem("Exploration", tabName = 'data_exploration', icon = icon("chart-area")),
+        shinydashboard::menuItem("Correlation", tabName = 'data_correlation', icon = icon("braille")),
+        shinydashboard::menuItem("Cross-panel", tabName = 'data_crosspanel', icon = icon("clone"))
       )
     ),
-    dashboardBody(
-      tabItems(
+    shinydashboard::dashboardBody(
+      shinydashboard::tabItems(
         # First tab content
-        tabItem(tabName = 'data_processing',
-                fluidRow(
-                  tabBox(
-                    tabPanel("Uploading",
+        shinydashboard::tabItem(tabName = 'data_processing',
+                shiny::fluidRow(
+                  shinydashboard::tabBox(
+                    shiny::tabPanel("Uploading",
+                                    shinyFiles::shinyFilesButton('choose_fcs_dp', label= h4('Select FCS files'), title='Please select FCS files', multiple=TRUE),
+                                    hr(),
+                                    conditionalPanel(
+                                      condition = "input.extr_clust_dproc == true",
+                                      textInput("extr_clust_pattern_dproc",
+                                                label = h5("full or part column name with clusters info (for cytofBrowser and cytofkit : <cluster>)"),
+                                                value = "cluster")),
+                                    hr(),
+                                    actionButton('butt_upload_dproc', label = "Upload")
+                    ),
+                    shiny::tabPanel("Transforming",
 
                     ),
-                    tabPanel("Transforming",
+                    shiny::tabPanel("Markers",
 
                     ),
-                    tabPanel("Markers",
+                    shiny::tabPanel("Clustering",
 
                     ),
-                    tabPanel("Clustering",
+                    shiny::tabPanel("Cluster management",
 
                     ),
-                    tabPanel("Cluster management",
-
-                    ),
-                    tabPanel("Save",
+                    shiny::tabPanel("Save",
 
                     )
+                  ),
+                  shinydashboard::box(
+                    fluidRow(
+                      column(2, actionBttn(inputId = "redraw_dp", style = "material-circle", color = "default" ,icon = icon("redo"))),
+                      column(2,
+                             dropdownButton(
+                               tags$h4("Options of plotting"),
+                               numericInput('sampling_size', label = h5("Cell fraction to display"), value = 0.5, step = 0.1),
+                               materialSwitch(inputId = 'fuse', label = h4("Size fuse"), value = TRUE),
+                               selectInput("method_plot_dp", label = h5("Visualisation method"),
+                                           choices = list("tSNE" = "tSNE", "UMAP" = "UMAP"),selected = "tSNE"),
+                               numericInput('point_size', label = h5("Size of points"), value = 0.3, step = 0.1),
+                               icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                             )
+                      ),
+                      column(2,
+                             dropdownButton(
+                               tags$h4("Advanced options"),
+                               uiOutput('advanced_opt_dp_ui'),
+                               icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                             )
+
+                      ),
+                      column(2,
+                             dropdownButton(
+                               selectInput('dwn_scatter_dp_ext', label = NULL,
+                                           choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                          'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                               downloadButton('dwn_scatter_dp', ""),
+                               icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                             )
+
+                      )
+                    ),
+                    plotOutput('scatter_plot_dp'),
+                    uiOutput('mk_scatter_dp_ui')
                   ),
                   tabBox(
                     tabPanel("Cell number",
