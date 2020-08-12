@@ -26,25 +26,6 @@ cytofBrowser_server <- function(input, output){
   plots <- reactiveValues()
 
 
-  ##### UI for advanced options data preparation
-  output$advanced_opt_dp_ui <- renderUI({
-    if(is.null(input$method_plot_dp)){return(NULL)}
-    if(is.null(input$method_plot_dp)){return(NULL)}
-    if(input$method_plot_dp == 'tSNE'){
-      ui <- fluidRow(
-        column(1),
-        column(10,
-               numericInput("data_prep_perplexity", "tSNE Perplexity", min = 0, max = 200, value = 30, step = 5),
-               numericInput("data_prep_theta", "tSNE Theta", min = 0, max = 1, value = 0.5, step = 0.1),
-               numericInput("data_prep_max_iter", "tSNE Iterations", value = 1000, step = 500)
-        )
-      )
-    }
-    if(input$method_plot_dp == 'UMAP'){ui <- NULL}
-    return(ui)
-  })
-
-
   ##### Upload data and automatic pre-processing steps
   observeEvent(input$butt_upload_dproc, {
     print("--0")
@@ -103,14 +84,6 @@ cytofBrowser_server <- function(input, output){
       incProgress(1)
     })
   })
-
-  ##### UI to choose marker for scatter plot dp
-  output$mk_scatter_dp_ui <- renderUI({
-    if(is.null(fcs_data$use_markers)){return(NULL)}
-    selectInput('mk_scatter_dp', label = h4("Plotted marker"),
-                choices = names(fcs_data$use_markers), selected = 1)
-  })
-
 
 
   ##### Drawing the reactive scatter plot to data preparation
@@ -182,28 +155,30 @@ cytofBrowser_server <- function(input, output){
     })
   })
 
-  ##### Download scatter plot data preparation
-  output$dwn_scatter_dp <- downloadHandler(
-    filename = function() {
-      ext <- input$dwn_scatter_dp_ext
-      if(is.null(ext)){ext <- "pdf"}
-      paste("Scatter_plot_data_preparation", ext, sep = ".") },
-    content = function(file) {
-      ext <- input$dwn_scatter_dp_ext
-      if(is.null(ext)){ext <- "pdf"}
-      ggplot2::ggsave(file, plot = plots$scatter_dp, device = ext)
-    }
-  )
+  #### Reaction to button "Transform" in "Data processing"
+  observeEvent(input$butt_trans_dproc, {
+    if(is.null(fcs_data$exprs_data)){return(NULL)}
+    ## Transform row data to scaled data by set parameters
+    withProgress(message = "Transformation", min =0, max = 3, value = 0,{
+      incProgress(1, detail = "Transformation" )
+      if('asinh' %in% input$transformation_list){
+        fcs_data$exprs_data <- exprs_asinh_transformation(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
+                                                       cofactor = input$cofactor)
+      }
+      incProgress(1, detail = "Outlier detection" )
+      if('outlier_by_quantile' %in% isolate(input$transformation_list)){
+        fcs_data$exprs_data <- exprs_outlier_squeezing(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
+                                                    quantile = input$quantile)
+      }
+      incProgress(1)
+    })
+  })
 
+  ##### UI for saving cell annotation as fcs files
   output$save_cell_ann_ui <- renderUI({
     if(is.null(fcs_data$cell_ann)){return(NULL)}
-    fluidRow(
-      column(1),
-      column(10,
-             selectInput('save_cell_ann_dp', label = h5("Add cell annotation to FCS files"),
-                         choices = colnames(fcs_data$cell_ann), multiple = TRUE)
-      )
-    )
+    selectInput('save_cell_ann_dp', label = h5("Adding cell annotation to FCS files"),
+                choices = colnames(fcs_data$cell_ann), multiple = TRUE)
   })
 
   ##### Save sample data with cluster info as panal files
@@ -221,6 +196,44 @@ cytofBrowser_server <- function(input, output){
   })
 
 
+  ##### UI for advanced options data preparation
+  output$advanced_opt_dp_ui <- renderUI({
+    if(is.null(input$method_plot_dp)){return(NULL)}
+    if(is.null(input$method_plot_dp)){return(NULL)}
+    if(input$method_plot_dp == 'tSNE'){
+      ui <- fluidRow(
+        column(1),
+        column(10,
+               numericInput("data_prep_perplexity", "tSNE Perplexity", min = 0, max = 200, value = 30, step = 5),
+               numericInput("data_prep_theta", "tSNE Theta", min = 0, max = 1, value = 0.5, step = 0.1),
+               numericInput("data_prep_max_iter", "tSNE Iterations", value = 1000, step = 500)
+        )
+      )
+    }
+    if(input$method_plot_dp == 'UMAP'){ui <- NULL}
+    return(ui)
+  })
+
+  ##### UI to choose marker for scatter plot dp
+  output$mk_scatter_dp_ui <- renderUI({
+    if(is.null(fcs_data$use_markers)){return(NULL)}
+    selectInput('mk_scatter_dp', label = h4("Plotted marker"),
+                choices = names(fcs_data$use_markers), selected = 1)
+  })
+
+
+  ##### Download scatter plot data preparation
+  output$dwn_scatter_dp <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_scatter_dp_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Scatter_plot_data_preparation", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_scatter_dp_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggplot2::ggsave(file, plot = plots$scatter_dp, device = ext)
+    }
+  )
 
 
 

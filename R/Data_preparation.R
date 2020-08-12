@@ -207,6 +207,19 @@ asinh_transformation <- function(fcs_raw, cofactor = 5, use_markers = NULL){
 #fcs_raw <- asinh_transformation(fcs_raw, 5)
 
 
+#' Transformation exprs matrix by asinh fransformation
+#'
+#' @param exprs_data matrix with expression data
+#' @param cofactor digit with used as denominator to transform data
+#' @param use_marker list of marker for transformation
+#' @return flowSet object with transform data by asinh function and divided by cofactor
+
+exprs_asinh_transformation <- function(exprs_data, use_markers, cofactor = 5){
+  exprs_asinh <- asinh(exprs_data[,use_markers] / cofactor)
+  return(exprs_asinh)
+}
+
+
 ##### Transformation to a from 0 to 1 variable and removing outliers
 #' Transformation to a from 0 to 1 variable and removing outliers
 #'
@@ -240,6 +253,23 @@ outlier_by_quantile_transformation <- function(fcs_raw, quantile = 0.01, use_mar
 ### test
 #fcs_raw <- outlier_by_quantile_transformation(fcs_raw, 0.01)
 
+#' Detect outliers from exprs data and squeeze from 0 to 1
+#'
+#' @param exprs_data matrix with expression data
+#' @param quantile number from 0 to 1 to set the quantile which is of cutoff threshold
+#' @param use_marker list of markers for transformation
+#'
+#' @return
+#' @importFrom stats quantile
+#'
+exprs_outlier_squeezing <- function(exprs_data, use_markers, quantile = 0.01){
+  rng <- stats::quantile(exprs_data[,use_markers], probs = c(quantile, 1-quantile))
+  exprs_outlier_squeeze <- t((t(exprs_data[,use_markers]) - rng[1]) / (rng[2] - rng[1]))
+  exprs_outlier_squeeze[exprs_outlier_squeeze < 0] <- 0
+  exprs_outlier_squeeze[exprs_outlier_squeeze > 1] <- 1
+  return(exprs_outlier_squeeze)
+}
+
 ##### Extract cell number
 #' Extract cell number
 #'
@@ -247,7 +277,6 @@ outlier_by_quantile_transformation <- function(fcs_raw, quantile = 0.01, use_mar
 #'
 #' @return
 #' @importFrom flowCore sampleNames "sampleNames<-" fsApply
-
 
 get_cell_number <- function(fcs_raw){
   cell_number <- data.frame(smpl = flowCore::sampleNames(fcs_raw), cell_nmbr = flowCore::fsApply(fcs_raw, nrow))

@@ -28,7 +28,7 @@ cytofBrowserGUI <-function(){
                 shiny::fluidRow(
                   shinydashboard::tabBox(
                     shiny::tabPanel("Uploading",
-                                    shinyFiles::shinyFilesButton('choose_fcs_dp', label= h4('Select FCS files'), title='Please select FCS files', multiple=TRUE),
+                                    shinyFiles::shinyFilesButton('choose_fcs_dp', label= 'Select FCS files', title='Please select FCS files', multiple=TRUE),
                                     hr(),
                                     conditionalPanel(
                                       condition = "input.extr_clust_dproc == true",
@@ -39,7 +39,20 @@ cytofBrowserGUI <-function(){
                                     actionButton('butt_upload_dproc', label = "Upload")
                     ),
                     shiny::tabPanel("Transforming",
-
+                                    checkboxGroupInput("transformation_list", label = h4("Transformations"),
+                                                       choices = list("asinh" = 'asinh', "outlier squeezing" = 'outlier_by_quantile',
+                                                                      "extract cluster info" = 'extract_cluster_info'),
+                                                       selected = c("asinh")),
+                                    conditionalPanel(
+                                      condition = "input.transformation_list.includes('asinh')",
+                                      numericInput("cofactor", label = h4("Cofactor for dividing"), value = 5)
+                                    ),
+                                    conditionalPanel(
+                                      condition = "input.transformation_list.includes('outlier_by_quantile')",
+                                      numericInput("quantile", label = h4("Quantile for outlier detection"), value = 0.01)
+                                    ),
+                                    hr(),
+                                    actionButton('butt_trans_dproc', label = "Transform")
                     ),
                     shiny::tabPanel("Markers",
 
@@ -58,7 +71,7 @@ cytofBrowserGUI <-function(){
                                     textInput("name_prefix", label = h5("Name prefix")),
                                     hr(),
                                     uiOutput('save_cell_ann_ui'),
-                                    actionButton('dwn_panel_clust', label = h4("Save"))
+                                    actionButton('dwn_panel_clust', label = "Save")
                     )
                   ),
                   shinydashboard::box(
