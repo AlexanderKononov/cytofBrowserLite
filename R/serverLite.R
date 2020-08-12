@@ -10,6 +10,7 @@
 #' @return
 #'
 #' @import shiny shinyFiles ggplot2
+#' @importFrom flowCore sampleNames write.flowSet
 cytofBrowser_server <- function(input, output){
 
   ########################
@@ -74,6 +75,8 @@ cytofBrowser_server <- function(input, output){
       fcs_data$cell_ann <- data.frame(all_cells = rep("cell", sum(fcs_data$cell_number$cell_nmbr)),
                                 samples = rep(fcs_data$cell_number$smpl, fcs_data$cell_number$cell_nmbr),
                                 row.names = 1:sum(fcs_data$cell_number$cell_nmbr))
+      print("ANNOTATION")
+      print(head(fcs_data$cell_ann))
       incProgress(1, detail = "Subsampling" )
       print("--8")
       fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
@@ -188,10 +191,34 @@ cytofBrowser_server <- function(input, output){
     content = function(file) {
       ext <- input$dwn_scatter_dp_ext
       if(is.null(ext)){ext <- "pdf"}
-      ggsave(file, plot = plots$scatter_dp, device = ext)
+      ggplot2::ggsave(file, plot = plots$scatter_dp, device = ext)
     }
   )
 
+  output$save_cell_ann_ui <- renderUI({
+    if(is.null(fcs_data$cell_ann)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             selectInput('save_cell_ann_dp', label = h5("Add cell annotation to FCS files"),
+                         choices = colnames(fcs_data$cell_ann), multiple = TRUE)
+      )
+    )
+  })
+
+  ##### Save sample data with cluster info as panal files
+  shinyDirChoose(input, 'choose_panel_clust', roots = roots)
+  observeEvent(input$dwn_panel_clust, {
+    if(is.null(fcs_data$fcs_raw)){return(NULL)}
+    panel_folder_path <- parseDirPath(roots, input$choose_panel_clust)
+    if(!is.null(panel_folder_path) | length(panel_folder_path) !=0 ){
+      filenames <- get_new_fcs_names(old_name = paste0(flowCore::sampleNames(fcs_raw), ".fcs"),
+                                     folder_path = panel_folder_path, prefix = input$name_prefix)
+      new_fcs <- get_clustered_fcs_files(fcs_raw = fcs_data$fcs_raw, cell_ann = fcs_data$cell_ann,
+                                         column_name = input$save_cell_ann_dp)
+      flowCore::write.flowSet(new_fcs, outdir = as.character(panel_folder_path), filename = filenames)
+    }
+  })
 
 
 

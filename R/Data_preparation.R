@@ -25,8 +25,8 @@ get_fcs_metadata <- function(fcs_files){
 }
 
 ### test
-#md <- get_fcs_metadata(c("./test_data/c13_20190704_hnp_perf_11_0_Alex2.fcs","./test_data/c14_20190704_hnp_perf_11_0_Alex2.fcs",
-#                        "./test_data/c13_20190704_hnp_perf_11_0_Alez1.fcs","./test_data/c14_20190704_hnp_perf_11_0_Alez1.fcs"))
+#md <- get_fcs_metadata(c("./../test_data/c13_20190704_hnp_perf_11_0_Alex2.fcs","./../test_data/c14_20190704_hnp_perf_11_0_Alex2.fcs",
+#                        "./../test_data/c13_20190704_hnp_perf_11_0_Alez1.fcs","./../test_data/c14_20190704_hnp_perf_11_0_Alez1.fcs"))
 #md <- get_fcs_metadata("./../../Toni_data/EC_200117_Freshly labelled PBMCs _1_0/Activation_Activation full panel unstim TILs_033.fcs")
 #md <- get_fcs_metadata("./../../cytofBrowser_project/Tape_data/Figure-1_S2_S3_raw/Figure-1_S2_S3_processed.fcs")
 
@@ -456,3 +456,62 @@ scatter_plot_data_prep <- function(fcs_raw, use_markers, sampling_size = 0.5, me
 #ggplot(tSNE,  aes(x = tSNE1, y = tSNE2, color = tSNE[,names(use_markers)[10]])) +
 #  geom_point(size = 0.2) +
 #  labs(color = names(use_markers)[10])
+
+
+#' Get new names with prefix for samples to save
+#'
+#' @param old_name vector of assumed names to save
+#' @param folder_path directory to save file
+#' @param prefix additional prefix to add to names
+#'
+#' @return
+#'
+get_new_fcs_names <- function(old_name, folder_path, prefix = ""){
+  new_names <- paste0(prefix,old_name)
+  ovrlp <- new_names %in% list.files(folder_path)
+  if(any(ovrlp) & (prefix == "")){
+    prefix <- "CyBr"
+    new_names[ovrlp] <- paste0(prefix,old_name[ovrlp])
+    ovrlp <- new_names %in% list.files(folder_path)
+  }
+  quantity <- 0
+  while (any(ovrlp)) {
+    quantity <- quantity +1
+    if (quantity == 1){new_names[ovrlp] <- gsub(prefix, paste0(prefix,"2"),new_names[ovrlp])}
+    if (quantity > 1){
+      new_names[ovrlp] <- gsub(paste0(prefix, as.character(quantity)),
+                               paste0(prefix, as.character(quantity+1)),new_names[ovrlp])
+    }
+    ovrlp <- new_names %in% list.files(folder_path)
+  }
+  return(new_names)
+}
+
+### test
+#get_new_fcs_names(old_name, folder_path)
+
+#### Adding of annotation info to flowSet object
+#' Adding of annotation info to flowSet object
+#'
+#' @param fcs_raw flowSet object
+#' @param cell_ann cell annotation table
+#' @param column_name vetor of column names from cell annotation data which we would like to add to fcs
+#'
+#' @return
+#' @importFrom flowCore sampleNames fr_append_cols
+#' @importClassesFrom flowCore flowSet
+#'
+get_clustered_fcs_files <- function(fcs_raw, cell_ann, column_name = c("cluster")){
+  format_cell_ann <- cell_ann
+  for (i in column_name){
+    format_cell_ann[,i] <- as.integer(as.factor(format_cell_ann[,i]))
+  }
+  new_fcs <- lapply(flowCore::sampleNames(fcs_raw), function(s) {
+    addition_col <- as.matrix(format_cell_ann[cell_ann$samples == s, column_name])
+    colnames(addition_col) <- column_name
+    flowCore::fr_append_cols(fcs_raw[[s]], addition_col)
+  })
+  names(new_fcs) <- flowCore::sampleNames(fcs_raw)
+  new_fcs <- as(new_fcs, 'flowSet')
+  return(new_fcs)
+}

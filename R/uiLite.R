@@ -51,7 +51,14 @@ cytofBrowserGUI <-function(){
 
                     ),
                     shiny::tabPanel("Save",
-
+                                    h5("Saving the data as FCS files "),
+                                    shinyDirButton('choose_panel_clust', label = "Folder choose", title = "Folder for saving FCS files"),
+                                    hr(),
+                                    h5("Saved set of files can be used as panel data in a cross-panel analysis"),
+                                    textInput("name_prefix", label = h5("Name prefix")),
+                                    hr(),
+                                    uiOutput('save_cell_ann_ui'),
+                                    actionButton('dwn_panel_clust', label = h4("Save"))
                     )
                   ),
                   shinydashboard::box(
