@@ -23,4 +23,6 @@ Imports:
     umap,
     ggplot2,
     stats,
-    shinyFiles
+    shinyFiles,
+    grDevices,
+    visNetwork

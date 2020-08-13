@@ -131,9 +131,13 @@ cytofBrowserGUI <-function(){
                 fluidRow(
                   tabBox(
                     tabPanel("Gating",
+                             uiOutput('gating_api_ui'),
+                             actionButton("butt_plot_for_gating", label = "Plot for gating")
                     ),
                     tabPanel("Gate management",
-
+                             uiOutput("mergeing_gates_ui"),
+                             hr(),
+                             uiOutput("rename_gates_ui")
                     ),
                     tabPanel("Cells management",
 
@@ -142,6 +146,11 @@ cytofBrowserGUI <-function(){
                     )
                   ),
                   shinydashboard::box(
+                    plotOutput('scatter_plot_gating', brush = "brush_gating"),
+                    fluidRow(
+                      column(6, textInput('new_gate_name', label = h5("Name of new gated cells"), value = "marker1+/marker2+")),
+                      column(6, actionButton("gete_chosen_cells", label = "Gate chosen cells"))
+                    )
 
                   )
                 ),
@@ -150,7 +159,7 @@ cytofBrowserGUI <-function(){
 
                   ),
                   shinydashboard::box(
-
+                    visNetwork::visNetworkOutput('gate_antology_graph')
                   )
                 )
         ),

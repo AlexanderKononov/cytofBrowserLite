@@ -13,7 +13,6 @@ get_fcs_metadata <- function(fcs_files){
   md <- data.frame(path = fcs_files)
   md$path <- as.character(md$path)
   md$file_name <- basename(md$path)
-
   samples <- gsub(".fcs", "", md$file_name)
   md$short_name <- unlist(lapply(1:length(samples), function(x){
     tmp <- unlist(strsplit(samples[x], ""))
@@ -81,10 +80,13 @@ get_fcs_raw <- function(md){
 #'
 get_exprs_data <- function(fcs_raw){
   exprs_data <- flowCore::fsApply(fcs_raw, flowCore::exprs)
-  #exprs_data <- cbind(exprs_data, as.matrix(data.frame(Sample = rep(1:length(fcs_raw), fsApply(fcs_raw, nrow)))))
   rownames(exprs_data) <- 1:nrow(exprs_data)
   return(exprs_data)
 }
+
+### test
+#exprs_data <- get_exprs_data(fcs_raw)
+
 
 ##### Create panel data
 #' Create panel data to fowSet object
@@ -111,12 +113,10 @@ get_fcs_panel <- function(fcs_raw){
     if(length(x) <= 1){return(x)}
     return(paste(x[-c(1)], sep = "_", collapse = "_"))
   })
-  #panel$antigen <- sapply(strsplit(panel$desc, "_"), function(x) x[length(x)])
-  #panel$antigen <- gsub(" \\(v)", "", panel$antigen)
   panel$marker_class <- "type"
   panel$marker_class[sapply(panel$desc, function(x) any(sapply(tech_patterns$marker_tech, function(y) grepl(y,x))))] <- "state"
-  #panel <- as.data.frame(apply(panel, c(1,2), function(x) gsub(" ", "_", x)))
   return(panel)
+
 }
 
 ### test
@@ -215,7 +215,8 @@ asinh_transformation <- function(fcs_raw, cofactor = 5, use_markers = NULL){
 #' @return flowSet object with transform data by asinh function and divided by cofactor
 
 exprs_asinh_transformation <- function(exprs_data, use_markers, cofactor = 5){
-  exprs_asinh <- asinh(exprs_data[,use_markers] / cofactor)
+  exprs_asinh <- exprs_data
+  exprs_asinh[,use_markers] <- asinh(exprs_data[,use_markers] / cofactor)
   return(exprs_asinh)
 }
 
@@ -263,12 +264,20 @@ outlier_by_quantile_transformation <- function(fcs_raw, quantile = 0.01, use_mar
 #' @importFrom stats quantile
 #'
 exprs_outlier_squeezing <- function(exprs_data, use_markers, quantile = 0.01){
+  exprs_outlier_squeeze <- exprs_data
   rng <- stats::quantile(exprs_data[,use_markers], probs = c(quantile, 1-quantile))
-  exprs_outlier_squeeze <- t((t(exprs_data[,use_markers]) - rng[1]) / (rng[2] - rng[1]))
-  exprs_outlier_squeeze[exprs_outlier_squeeze < 0] <- 0
-  exprs_outlier_squeeze[exprs_outlier_squeeze > 1] <- 1
+  exprs_outlier_squeeze[,use_markers] <- t((t(exprs_data[,use_markers]) - rng[1]) / (rng[2] - rng[1]))
+  exprs_outlier_squeeze[,use_markers] <- apply(exprs_outlier_squeeze[,use_markers], 2, function(x){
+    new_x <- x
+    new_x[new_x < 0] <- 0
+    new_x[new_x > 1] <- 1
+    return(new_x)
+  })
   return(exprs_outlier_squeeze)
 }
+
+### test
+#exprs_data <- exprs_outlier_squeezing(exprs_data, use_markers)
 
 ##### Extract cell number
 #' Extract cell number
@@ -301,30 +310,17 @@ get_cell_number <- function(fcs_raw){
 #' @return
 #'
 get_subset_coord <- function(cell_ann, sampling_size = 0.5, fuse = TRUE, size_fuse = 3000){
-  print("-------0")
   if(!("samples" %in% colnames(cell_ann))){print("samples info are not in cell_ann")}
-  print("-------1")
   ## How many cells to sampling per-sample
   smpl_cell_amount <- as.integer((table(cell_ann$samples) + 0.1) * sampling_size)
-  print("-------2")
-  print(smpl_cell_amount)
   if(fuse & (sum(smpl_cell_amount) > size_fuse)){
     smpl_cell_amount <- as.integer((smpl_cell_amount/sum(smpl_cell_amount))*size_fuse)}
-  print("-------3")
-  print(str(smpl_cell_amount))
-  print(table(cell_ann$samples))
   names(smpl_cell_amount) <- names(table(cell_ann$samples))
-
-  print("-------4")
   ## Get subsample indices
   set.seed(1234)
   subset_coord <- unlist(lapply(names(smpl_cell_amount), function(i){
     sample(rownames(cell_ann[cell_ann$samples == i,]), smpl_cell_amount[i], replace = FALSE)}))
-  print("-------5")
   subset_coord <- subset_coord[order(as.integer(subset_coord))]
-  print(head(subset_coord))
-  print(length(subset_coord))
-  print("-------6")
   return(subset_coord)
 }
 
@@ -363,40 +359,19 @@ get_subset_coord <- function(cell_ann, sampling_size = 0.5, fuse = TRUE, size_fu
 get_dim_reduce <- function(exprs_data, cell_ann, subset_coord, use_markers, force = FALSE,
                            method = "tSNE", perplexity = 30, theta = 0.5, max_iter = 1000,
                            pca_param = FALSE, check_duplicates = FALSE, seed = 1234){
-  print("--------0")
   col_position <- grepl(method, colnames(cell_ann))
-  print("--------1")
-  print(col_position)
-  print(head(cell_ann[subset_coord,which(col_position)]))
-  print(head(unlist(cell_ann[subset_coord,which(col_position)])))
-  print(table(is.na(unlist(cell_ann[subset_coord,which(col_position)]))))
-  print(table(!(is.na(unlist(cell_ann[subset_coord,which(col_position)])))))
-  print(all(!(is.na(unlist(cell_ann[subset_coord,which(col_position)])))))
   if((any(col_position) & !force) & all(!(is.na(unlist(cell_ann[subset_coord,which(col_position)]))))){
     return(cell_ann)
   }
-  print("--------2")
-  print(head(cell_ann[,col_position]))
-
   new_cell_ann <- cell_ann
 
   if(method == "tSNE"){
     new_cell_ann$tSNE1 <- NA
     new_cell_ann$tSNE2 <- NA
-    print("--------3")
-    print(head(new_cell_ann))
-    print(perplexity)
     ##### Run t-SNE
     set.seed(seed)
     tsne_result <- Rtsne::Rtsne(exprs_data[subset_coord, use_markers], check_duplicates = check_duplicates, pca = pca_param,
                                 perplexity = perplexity, theta = theta, max_iter = max_iter)
-    print("--------4")
-    print(head(new_cell_ann))
-    print(dim(exprs_data[subset_coord, use_markers]))
-    print(head(exprs_data[subset_coord, use_markers]))
-    print(str(tsne_result))
-    print(dim(tsne_result$Y))
-    print(head(tsne_result$Y))
     new_cell_ann[subset_coord, "tSNE1"] <- tsne_result$Y[, 1]
     new_cell_ann[subset_coord, "tSNE2"] <- tsne_result$Y[, 2]
   }
@@ -409,7 +384,6 @@ get_dim_reduce <- function(exprs_data, cell_ann, subset_coord, use_markers, forc
     new_cell_ann[subset_coord, "UMAP1"] <- umap_out$layout[, 1]
     new_cell_ann[subset_coord, "UMAP2"] <- umap_out$layout[, 2]
   }
-  print("--------5")
   return(new_cell_ann)
 }
 

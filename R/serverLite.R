@@ -11,6 +11,7 @@
 #'
 #' @import shiny shinyFiles ggplot2
 #' @importFrom flowCore sampleNames write.flowSet
+#' @importFrom grDevices colorRampPalette
 cytofBrowser_server <- function(input, output){
 
   ########################
@@ -21,6 +22,7 @@ cytofBrowser_server <- function(input, output){
 
   ##### Create "fcs_data" as reactive object to store the CyTOF data
   fcs_data <-reactiveValues()
+  gates <- reactiveValues()
   data_prep_settings <- reactiveValues(sampling_size = 0.5, fuse = TRUE, size_fuse = 3000, method = "tSNE",
                                        perplexity = 30, theta = 0.5, max_iter = 1000)
   plots <- reactiveValues()
@@ -28,59 +30,42 @@ cytofBrowser_server <- function(input, output){
 
   ##### Upload data and automatic pre-processing steps
   observeEvent(input$butt_upload_dproc, {
-    print("--0")
     if((length(input$choose_fcs_dp) <= 1)){return(NULL)}
-    print("--0.1")
     withProgress(message = "Extraction data", min =0, max = 11, value = 0,{
       ## Get row data fcs files
       fcs_data$md <- get_fcs_metadata(parseFilePaths(roots, input$choose_fcs_dp)$datapath)
-      print("--1")
       incProgress(1, detail = "Upload data" )
       fcs_data$fcs_raw <- get_fcs_raw(fcs_data$md)
-      print("--2")
       incProgress(1, detail = "Extraction ereachment" )
       fcs_data$exprs_data <- get_exprs_data(fcs_data$fcs_raw)
-      print("--3")
       incProgress(1, detail = "Extraction panel")
       fcs_data$panel <- get_fcs_panel(fcs_data$fcs_raw)
-      print("--4")
       incProgress(1, detail = "Markers processing" )
       fcs_data$use_markers <- get_use_marker(fcs_data$panel)
-      print("--5")
       fcs_data$entire_panel <- get_entire_panel(fcs_raw = fcs_data$fcs_raw)
       incProgress(1, detail = "Cell number calculation" )
-      print("--6")
       fcs_data$cell_number <- get_cell_number(fcs_data$fcs_raw)
       incProgress(1, detail = "Creating of cell annotation" )
-      print("--7")
       fcs_data$cell_ann <- data.frame(all_cells = rep("cell", sum(fcs_data$cell_number$cell_nmbr)),
                                 samples = rep(fcs_data$cell_number$smpl, fcs_data$cell_number$cell_nmbr),
                                 row.names = 1:sum(fcs_data$cell_number$cell_nmbr))
-      print("ANNOTATION")
-      print(head(fcs_data$cell_ann))
       incProgress(1, detail = "Subsampling" )
-      print("--8")
       fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
                                                 sampling_size = data_prep_settings$sampling_size,
                                                 fuse = data_prep_settings$fuse,
                                                 size_fuse = data_prep_settings$size_fuse)
-      print("--8.5")
       incProgress(1, detail = "Dimention redicing" )
       fcs_data$cell_ann <- get_dim_reduce(fcs_data$exprs_data, fcs_data$cell_ann,
                                           fcs_data$subset_coord, fcs_data$use_markers,
                                           method = data_prep_settings$method, perplexity = data_prep_settings$perplexity,
                                           theta = data_prep_settings$theta, max_iter = data_prep_settings$max_iter,
                                           pca_param = FALSE, check_duplicates = FALSE, seed = 1234)
-      print("--9")
-      print(dim(fcs_data$cell_ann[fcs_data$subset_coord,]))
-      incProgress(1, detail = "Plotting" )
-
-      incProgress(1, detail = "Extraction fcs cluster info")
-
+      incProgress(1, detail = "Gate template" )
       ## Add primer column to cell type data frame and gates data frame
-
-      print("--10")
-
+      gates$gates <- data.frame(all_cells = rep(TRUE, sum(fcs_data$cell_number$cell_nmbr)))
+      gates$antology <- data.frame(name = "all_cells", parent = NA)
+      rownames(gates$antology) <- gates$antology$name
+      incProgress(1, detail = "Extraction fcs cluster info")
       incProgress(1)
     })
   })
@@ -97,9 +82,7 @@ cytofBrowser_server <- function(input, output){
     if(data_prep_settings$method == "UMAP"){
       plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP1"],
                               Y = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP2"])}
-
     plot_data$mk <- fcs_data$exprs_data[fcs_data$subset_coord, fcs_data$use_markers[color_mk]]
-    print(dim(plot_data))
     plots$scatter_dp <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
       geom_point(size = input$point_size) +
       scale_color_gradient2(midpoint = 0.5, low = 'blue', mid = "gray",  high = 'red') +
@@ -112,45 +95,27 @@ cytofBrowser_server <- function(input, output){
   observeEvent(input$redraw_dp, {
     withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
       incProgress(1, detail = "Subsampling" )
-      print("--8")
       ## If subset was changed
-      print(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size, input$fuse))
-      print(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size, input$fuse)))
       if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size, input$fuse))){
-        print(input$sampling_size)
-        print(data_prep_settings$sampling_size)
         if(!is.null(input$sampling_size)){data_prep_settings$sampling_size <- input$sampling_size}
         if(!is.null(input$fuse)){data_prep_settings$fuse <- input$fuse}
-        print(data_prep_settings$sampling_size)
         fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
                                                   sampling_size = data_prep_settings$sampling_size,
                                                   fuse = data_prep_settings$fuse,
                                                   size_fuse = data_prep_settings$size_fuse)
-        print(length(fcs_data$subset_coord))
       }
       ## Repeat dimention reducing
-      print("--8.5")
       incProgress(1, detail = "Dimention redicing" )
-      #if(any(c(data_prep_settings$method, data_prep_settings$perplexity,
-      #     data_prep_settings$theta, data_prep_settings$max_iter) != c(input$method_plot_dp, input$data_prep_perplexity,
-      #                                                                 input$data_prep_theta, input$data_prep_max_iter))){}
-      print(input$data_prep_perplexity)
-      print(data_prep_settings$perplexity)
       dim_reduce_force <- FALSE
       if(!is.null(input$method_plot_dp)){data_prep_settings$method <- input$method_plot_dp; dim_reduce_force <- TRUE}
       if(!is.null(input$data_prep_perplexity)){data_prep_settings$perplexity <- input$data_prep_perplexity; dim_reduce_force <- TRUE}
       if(!is.null(input$data_prep_theta)){data_prep_settings$theta <- input$data_prep_theta; dim_reduce_force <- TRUE}
       if(!is.null(input$data_prep_max_iter)){data_prep_settings$max_iter <- input$data_prep_max_iter; dim_reduce_force <- TRUE}
-      print(data_prep_settings$perplexity)
       fcs_data$cell_ann <- get_dim_reduce(fcs_data$exprs_data, fcs_data$cell_ann,
                                           fcs_data$subset_coord, fcs_data$use_markers,force = dim_reduce_force,
                                           method = data_prep_settings$method, perplexity = data_prep_settings$perplexity,
                                           theta = data_prep_settings$theta, max_iter = data_prep_settings$max_iter,
                                           pca_param = FALSE, check_duplicates = FALSE, seed = 1234)
-      print("--9")
-      print(head(fcs_data$cell_ann))
-      print(head(fcs_data$cell_ann[fcs_data$subset_coord,]))
-      print(dim(fcs_data$cell_ann[fcs_data$subset_coord,]))
       incProgress(1, detail = "Plotting" )
     })
   })
@@ -235,6 +200,200 @@ cytofBrowser_server <- function(input, output){
     }
   )
 
+  ########################
+  ###      Gating      ###
+  ########################
+
+  ##### Create UI to set the gating plot
+  output$gating_api_ui <- renderUI({
+    if(is.null(gates$gates)){return(NULL)}
+    if(is.null(fcs_data$entire_panel)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             selectInput('gating_subset', label = h5("Data for gating"),
+                         choices = colnames(gates$gates), selected = 1),
+             selectInput('gating_mk1', label = h5("Marker for X"),
+                         choices = names(fcs_data$entire_panel), selected = 1),
+             selectInput('gating_mk2', label = h5("Marker for Y"),
+                         choices = names(fcs_data$entire_panel), selected = 2)
+      )
+    )
+  })
+
+  ##### Create UI to convert gates to cell annotation
+  output$mergeing_gates_ui <- renderUI({
+    if(is.null(gates$gates)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             h4("Convert gates to cell annotation"),
+             selectInput("gate_converting_method", label = h5("converting method"),
+                         choices = list("Pure selection" = 'pure', "Gates squeezing" = 'squeeze'),selected = 1),
+             selectInput("gates_to_convert_gating", label = h5("Choose gates"),
+                         choices = gates$antology$name[-1], multiple = TRUE),
+             actionButton("convert_gates", label = "Convert")
+      )
+    )
+  })
+
+  ##### Create UI to rename gates
+  output$rename_gates_ui <- renderUI({
+    if(is.null(input$gated_node_id)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             h4("Rename gates"),
+             textInput('new_gate_name_gating', label = h5("Write new name"),
+                       value = as.character(input$gated_node_id)),
+             actionButton("rename_gates", label = "Rename")
+      )
+    )
+  })
+
+  ### Make subset of data to gatingplot
+  observeEvent(input$butt_plot_for_gating, {
+    print("--1---------------")
+    if(is.null(gates$gates)){return(NULL)}
+    if(is.null(input$gating_subset)){return(NULL)}
+    if(is.null(input$gating_mk1)){return(NULL)}
+    if(is.null(input$gating_mk2)){return(NULL)}
+    print("--2---------------")
+    withProgress(message = "Gate drawing", min =0, max = 3, value = 0,{
+      incProgress(1)
+      gates$gated_data_subset <- get_exprs_data_for_gating(exprs_data = fcs_data$exprs_data,
+                                                     gating_subset = gates$gates[,input$gating_subset],
+                                                     gating_mk1 = fcs_data$entire_panel[input$gating_mk1],
+                                                     gating_mk2 = fcs_data$entire_panel[input$gating_mk2])
+      incProgress(1)
+      gates$gated_data_subset <- get_modif_sparse_data_gating(gates$gated_data_subset)
+      print("--3---------------")
+      incProgress(1)
+    })
+  })
+
+  ### Drawing interactive dencity plot for gating
+  output$scatter_plot_gating <- renderPlot({
+    print("++++1++++")
+    if(is.null(gates$gated_data_subset)){return(NULL)}
+    a_test <<- gates$gated_data_subset
+    print("++++2++++")
+    colfunc <- grDevices::colorRampPalette(c("black", "red", "yellow"))
+    print("++++4++++")
+    min_mk1 <- min(gates$gated_data_subset$gating_mk1)
+    max_mk1 <- max(gates$gated_data_subset$gating_mk1)
+    min_mk2 <- min(gates$gated_data_subset$gating_mk2)
+    max_mk2 <- max(gates$gated_data_subset$gating_mk2)
+    print(min_mk1)
+    print(max_mk1)
+    print("++++5++++")
+    print(head(gates$gated_data_subset))
+    plots$scatter_plot_gating <- ggplot(gates$gated_data_subset, aes(x = gating_mk1, y = gating_mk2)) +
+      ylim((min_mk2 - 0.1*(max_mk2 - min_mk2)),
+           (max_mk2 + 0.1*(max_mk2 - min_mk2))) +
+      xlim((min_mk1 - 0.1*(max_mk1 - min_mk1)),
+           (max_mk1 + 0.1*(max_mk1 - min_mk1))) +
+      xlab(input$gating_mk1) +
+      ylab(input$gating_mk2) +
+      geom_point(size = 0.1) +
+      stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+      scale_fill_gradientn(colours=colfunc(400))+
+      geom_density2d(colour="black") +
+      theme_bw() +
+      theme(legend.position = "none")
+    print("++++6++++")
+    return(plots$scatter_plot_gating)
+  })
+
+  output$gate_antology_graph <- visNetwork::renderVisNetwork({
+    if(is.null(gates$antology)){return(NULL)}
+    print("===Drawing===")
+    print("...1...")
+    print(gates$antology)
+    nodes <- data.frame(id = gates$antology$name, label = gates$antology$name)
+    print("...2...")
+    edges <- data.frame(from = gates$antology$parent, to = gates$antology$name)
+    print("...3...")
+    edges <- edges[!is.na(edges$from),]
+    print("...4...")
+    visNetwork::visNetwork(nodes, edges) %>%
+      visNetwork::visInteraction(hover = TRUE) %>%
+      visNetwork::visEvents(select = "function(nodes) { Shiny.onInputChange('gated_node_id', nodes.nodes);}") %>%
+      visNetwork::visHierarchicalLayout()
+  })
+
+  ### Allocation a new gate
+  observeEvent(input$gete_chosen_cells, {
+    if(is.null(input$brush_gating)){return(NULL)}
+    if(is.null(gates$gated_data_subset)){return(NULL)}
+    print("--1--")
+    new_name <- paste0("Gate", as.character(ncol(gates$gates)+1), "_",
+                       input$gating_mk1, "_", input$gating_mk2, "_from_", strsplit(input$gating_subset, "_")[[1]][1])
+    print(new_name)
+    if(!is.null(input$new_gate_name) & (input$new_gate_name != "marker1+/marker2+")){new_name <- input$new_gate_name}
+    print(new_name)
+    print("--2--")
+    original_cell_coordinates <- brushedPoints(gates$gated_data_subset, input$brush_gating, xvar = "gating_mk1", yvar = "gating_mk2")
+    print("--3--")
+    original_cell_coordinates <- original_cell_coordinates$original_cell_coordinates
+    print(head(original_cell_coordinates))
+    print("--4--")
+    gates$gates$new_gate <- FALSE
+    gates$gates[original_cell_coordinates, "new_gate"] <- TRUE
+    print(head(gates$gates))
+    print("--5--")
+    if(any(grepl(new_name, colnames(gates$gates)))){new_name <- paste0(new_name,"_",sum(grepl(new_name, colnames(gates$gates)))+1)}
+    print(new_name)
+    print("--6--")
+    colnames(gates$gates)[which(colnames(gates$gates) ==  "new_gate")] <- new_name
+    print(head(gates$gates))
+    ## Add antology note of gating for graph
+    print("--7--")
+    print(gates$antology)
+    gates$antology <- rbind(gates$antology, data.frame(name = new_name, parent = input$gating_subset))
+    print("--8--")
+    print(gates$antology)
+    rownames(gates$antology) <- gates$antology$name
+    print("--9--")
+    print(gates$antology)
+  })
+
+  ##### Converting gates to cell annotation data
+  observeEvent(input$convert_gates, {
+    fcs_data$cell_ann <- get_cell_type_from_gates(gates$gates, input$gates_to_convert_gating,
+                                            fcs_data$cell_ann, method = input$gate_converting_method)
+    print(head(fcs_data$cell_ann))
+  })
+
+  ##### Renew gate reactive object after gate rename
+  observeEvent(input$rename_gates, {
+    if(is.null(input$new_gate_name_gating)){return(NULL)}
+    if(input$new_gate_name_gating == ""){return(NULL)}
+    print("====RENAME====")
+    print(".1.")
+    print(gates$antology)
+    print(input$gated_node_id)
+    print(str(gates$antology$name))
+    print(levels(gates$antology$name))
+    #levels(gates$antology$name)[levels(gates$antology$name) == input$gated_node_id] <- input$new_gate_name_gating
+    print(".2.")
+    print(gates$antology)
+    gates$antology$name[gates$antology$name == input$gated_node_id] <- input$new_gate_name_gating
+    print("as---vector")
+    print(gates$antology)
+
+    #levels(gates$antology$parent)[levels(gates$antology$parent) == input$gated_node_id] <- input$new_gate_name_gating
+    gates$antology$parent[gates$antology$parent == input$gated_node_id] <- input$new_gate_name_gating
+    print(".3.")
+    rownames(gates$antology) <- gates$antology$name
+    print(".4.")
+    colnames(gates$gates)[colnames(gates$gates) == input$gated_node_id] <- input$new_gate_name_gating
+    print(".5.")
+    print(gates$antology)
+  })
+
 
 
 }
+
+
