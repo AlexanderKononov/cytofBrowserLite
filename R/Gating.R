@@ -9,7 +9,7 @@
 #' @return
 #' @importClassesFrom flowCore flowSet
 #' @importFrom flowCore fsApply exprs "exprs<-"
-
+#'
 get_data_for_gating <- function(fcs_raw, gating_subset, gating_mk1, gating_mk2){
   raw_df <- flowCore::fsApply(fcs_raw, function(x) flowCore::exprs(x))
   raw_df <- as.data.frame(raw_df)
@@ -23,7 +23,7 @@ get_data_for_gating <- function(fcs_raw, gating_subset, gating_mk1, gating_mk2){
 #raw_df <- get_data_for_gating(fcs_raw, rep(TRUE, 13402), "I127Di", "Tm169Di")
 
 
-#' extract data table for plot to gate
+#' Extract data table for plot to gate
 #'
 #' @param exprs_data matrix with expression data
 #' @param gating_subset subset to plot to gating
@@ -32,22 +32,17 @@ get_data_for_gating <- function(fcs_raw, gating_subset, gating_mk1, gating_mk2){
 #'
 #' @return
 get_exprs_data_for_gating <- function(exprs_data, gating_subset, gating_mk1, gating_mk2){
-  print("---------1")
   raw_df <- as.data.frame(exprs_data[,c(gating_mk1, gating_mk2)])
-  print("---------2")
   raw_df$original_cell_coordinates <- 1:nrow(exprs_data)
-  print("---------3")
   raw_df <- raw_df[gating_subset,]
-  print("---------4")
   colnames(raw_df) <- c("gating_mk1", "gating_mk2", "original_cell_coordinates")
-  print("---------5")
   return(raw_df)
 }
 
 #' Check and adjusting sparse data for density plot for gating
 #'
 #' @param gated_data_subset matrix of data for adjusting
-#' @param mk column in matrix for adjusting and ploting
+#' @param mk column in matrix for adjusting and plotting
 #'
 #' @return
 #' @importFrom stats quantile
@@ -62,7 +57,6 @@ get_modif_sparse_data_gating <- function(gated_data_subset, mk = c("gating_mk1",
       adj_modif <- (max(data_vector) - min(data_vector)) *0.001
       mid <- which(data_vector == qu["50%"])
       data_vector[sample(mid,n_modif)] <- qu["50%"] + adj_modif
-      print("====DATA WAS ADJUSTED====")
     }
     new_gated_data_subset[,i] <- data_vector
   }
@@ -99,6 +93,7 @@ get_cell_type_from_gates <- function(gates, gate_list, cell_annotation, method =
   return(new_cell_annotation)
 }
 
+
 #' Extract annotation fron fcs_raw object to cell annotation object
 #'
 #' @param entire_panel wide range of column names from floeSet without any filtration
@@ -117,7 +112,6 @@ get_add_cell_annotation_from_data <- function(entire_panel, fcs_raw, cell_annota
 }
 
 
-#### Adding of cell annatation to flowSet object
 #' Adding of cluster-info to flowSet object
 #'
 #' @param fcs_raw flowSet object with data

@@ -12,6 +12,7 @@
 #' @import shiny shinyFiles ggplot2
 #' @importFrom flowCore sampleNames write.flowSet
 #' @importFrom grDevices colorRampPalette
+#'
 cytofBrowser_server <- function(input, output){
 
   ########################
@@ -91,6 +92,7 @@ cytofBrowser_server <- function(input, output){
     return(plots$scatter_dp)
   })
 
+
   ##### Rewrite for scatter plot
   observeEvent(input$redraw_dp, {
     withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
@@ -104,7 +106,7 @@ cytofBrowser_server <- function(input, output){
                                                   fuse = data_prep_settings$fuse,
                                                   size_fuse = data_prep_settings$size_fuse)
       }
-      ## Repeat dimention reducing
+      ## Repeat dimension reducing
       incProgress(1, detail = "Dimention redicing" )
       dim_reduce_force <- FALSE
       if(!is.null(input$method_plot_dp)){data_prep_settings$method <- input$method_plot_dp; dim_reduce_force <- TRUE}
@@ -119,6 +121,7 @@ cytofBrowser_server <- function(input, output){
       incProgress(1, detail = "Plotting" )
     })
   })
+
 
   #### Reaction to button "Transform" in "Data processing"
   observeEvent(input$butt_trans_dproc, {
@@ -139,12 +142,14 @@ cytofBrowser_server <- function(input, output){
     })
   })
 
+
   ##### UI for saving cell annotation as fcs files
   output$save_cell_ann_ui <- renderUI({
     if(is.null(fcs_data$cell_ann)){return(NULL)}
     selectInput('save_cell_ann_dp', label = h5("Adding cell annotation to FCS files"),
                 choices = colnames(fcs_data$cell_ann), multiple = TRUE)
   })
+
 
   ##### Save sample data with cluster info as panal files
   shinyDirChoose(input, 'choose_panel_clust', roots = roots)
@@ -179,6 +184,7 @@ cytofBrowser_server <- function(input, output){
     return(ui)
   })
 
+
   ##### UI to choose marker for scatter plot dp
   output$mk_scatter_dp_ui <- renderUI({
     if(is.null(fcs_data$use_markers)){return(NULL)}
@@ -199,6 +205,7 @@ cytofBrowser_server <- function(input, output){
       ggplot2::ggsave(file, plot = plots$scatter_dp, device = ext)
     }
   )
+
 
   ########################
   ###      Gating      ###
@@ -221,6 +228,7 @@ cytofBrowser_server <- function(input, output){
     )
   })
 
+
   ##### Create UI to convert gates to cell annotation
   output$mergeing_gates_ui <- renderUI({
     if(is.null(gates$gates)){return(NULL)}
@@ -237,6 +245,7 @@ cytofBrowser_server <- function(input, output){
     )
   })
 
+
   ##### Create UI to rename gates
   output$rename_gates_ui <- renderUI({
     if(is.null(input$gated_node_id)){return(NULL)}
@@ -251,14 +260,13 @@ cytofBrowser_server <- function(input, output){
     )
   })
 
+
   ### Make subset of data to gatingplot
   observeEvent(input$butt_plot_for_gating, {
-    print("--1---------------")
     if(is.null(gates$gates)){return(NULL)}
     if(is.null(input$gating_subset)){return(NULL)}
     if(is.null(input$gating_mk1)){return(NULL)}
     if(is.null(input$gating_mk2)){return(NULL)}
-    print("--2---------------")
     withProgress(message = "Gate drawing", min =0, max = 3, value = 0,{
       incProgress(1)
       gates$gated_data_subset <- get_exprs_data_for_gating(exprs_data = fcs_data$exprs_data,
@@ -267,27 +275,19 @@ cytofBrowser_server <- function(input, output){
                                                      gating_mk2 = fcs_data$entire_panel[input$gating_mk2])
       incProgress(1)
       gates$gated_data_subset <- get_modif_sparse_data_gating(gates$gated_data_subset)
-      print("--3---------------")
       incProgress(1)
     })
   })
 
+
   ### Drawing interactive dencity plot for gating
   output$scatter_plot_gating <- renderPlot({
-    print("++++1++++")
     if(is.null(gates$gated_data_subset)){return(NULL)}
-    a_test <<- gates$gated_data_subset
-    print("++++2++++")
     colfunc <- grDevices::colorRampPalette(c("black", "red", "yellow"))
-    print("++++4++++")
     min_mk1 <- min(gates$gated_data_subset$gating_mk1)
     max_mk1 <- max(gates$gated_data_subset$gating_mk1)
     min_mk2 <- min(gates$gated_data_subset$gating_mk2)
     max_mk2 <- max(gates$gated_data_subset$gating_mk2)
-    print(min_mk1)
-    print(max_mk1)
-    print("++++5++++")
-    print(head(gates$gated_data_subset))
     plots$scatter_plot_gating <- ggplot(gates$gated_data_subset, aes(x = gating_mk1, y = gating_mk2)) +
       ylim((min_mk2 - 0.1*(max_mk2 - min_mk2)),
            (max_mk2 + 0.1*(max_mk2 - min_mk2))) +
@@ -301,21 +301,15 @@ cytofBrowser_server <- function(input, output){
       geom_density2d(colour="black") +
       theme_bw() +
       theme(legend.position = "none")
-    print("++++6++++")
     return(plots$scatter_plot_gating)
   })
 
+  ### The object for the anthology graph of gates
   output$gate_antology_graph <- visNetwork::renderVisNetwork({
     if(is.null(gates$antology)){return(NULL)}
-    print("===Drawing===")
-    print("...1...")
-    print(gates$antology)
     nodes <- data.frame(id = gates$antology$name, label = gates$antology$name)
-    print("...2...")
     edges <- data.frame(from = gates$antology$parent, to = gates$antology$name)
-    print("...3...")
     edges <- edges[!is.na(edges$from),]
-    print("...4...")
     visNetwork::visNetwork(nodes, edges) %>%
       visNetwork::visInteraction(hover = TRUE) %>%
       visNetwork::visEvents(select = "function(nodes) { Shiny.onInputChange('gated_node_id', nodes.nodes);}") %>%
@@ -326,72 +320,35 @@ cytofBrowser_server <- function(input, output){
   observeEvent(input$gete_chosen_cells, {
     if(is.null(input$brush_gating)){return(NULL)}
     if(is.null(gates$gated_data_subset)){return(NULL)}
-    print("--1--")
     new_name <- paste0("Gate", as.character(ncol(gates$gates)+1), "_",
                        input$gating_mk1, "_", input$gating_mk2, "_from_", strsplit(input$gating_subset, "_")[[1]][1])
-    print(new_name)
     if(!is.null(input$new_gate_name) & (input$new_gate_name != "marker1+/marker2+")){new_name <- input$new_gate_name}
-    print(new_name)
-    print("--2--")
     original_cell_coordinates <- brushedPoints(gates$gated_data_subset, input$brush_gating, xvar = "gating_mk1", yvar = "gating_mk2")
-    print("--3--")
     original_cell_coordinates <- original_cell_coordinates$original_cell_coordinates
-    print(head(original_cell_coordinates))
-    print("--4--")
     gates$gates$new_gate <- FALSE
     gates$gates[original_cell_coordinates, "new_gate"] <- TRUE
-    print(head(gates$gates))
-    print("--5--")
     if(any(grepl(new_name, colnames(gates$gates)))){new_name <- paste0(new_name,"_",sum(grepl(new_name, colnames(gates$gates)))+1)}
-    print(new_name)
-    print("--6--")
     colnames(gates$gates)[which(colnames(gates$gates) ==  "new_gate")] <- new_name
-    print(head(gates$gates))
-    ## Add antology note of gating for graph
-    print("--7--")
-    print(gates$antology)
+    ## Add anthology note of gating for graph
     gates$antology <- rbind(gates$antology, data.frame(name = new_name, parent = input$gating_subset))
-    print("--8--")
-    print(gates$antology)
     rownames(gates$antology) <- gates$antology$name
-    print("--9--")
-    print(gates$antology)
   })
 
   ##### Converting gates to cell annotation data
   observeEvent(input$convert_gates, {
     fcs_data$cell_ann <- get_cell_type_from_gates(gates$gates, input$gates_to_convert_gating,
                                             fcs_data$cell_ann, method = input$gate_converting_method)
-    print(head(fcs_data$cell_ann))
   })
 
   ##### Renew gate reactive object after gate rename
   observeEvent(input$rename_gates, {
     if(is.null(input$new_gate_name_gating)){return(NULL)}
     if(input$new_gate_name_gating == ""){return(NULL)}
-    print("====RENAME====")
-    print(".1.")
-    print(gates$antology)
-    print(input$gated_node_id)
-    print(str(gates$antology$name))
-    print(levels(gates$antology$name))
-    #levels(gates$antology$name)[levels(gates$antology$name) == input$gated_node_id] <- input$new_gate_name_gating
-    print(".2.")
-    print(gates$antology)
     gates$antology$name[gates$antology$name == input$gated_node_id] <- input$new_gate_name_gating
-    print("as---vector")
-    print(gates$antology)
-
-    #levels(gates$antology$parent)[levels(gates$antology$parent) == input$gated_node_id] <- input$new_gate_name_gating
     gates$antology$parent[gates$antology$parent == input$gated_node_id] <- input$new_gate_name_gating
-    print(".3.")
     rownames(gates$antology) <- gates$antology$name
-    print(".4.")
     colnames(gates$gates)[colnames(gates$gates) == input$gated_node_id] <- input$new_gate_name_gating
-    print(".5.")
-    print(gates$antology)
   })
-
 
 
 }
