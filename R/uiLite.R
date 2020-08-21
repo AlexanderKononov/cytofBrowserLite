@@ -170,6 +170,20 @@ cytofBrowserGUI <-function(){
                 fluidRow(
                   tabBox(
                     tabPanel("clustering",
+                             radioButtons("mode_k_choice", label = h4("Choose of number of clusters"),
+                                          choices = list("Automatically detect optimum" = 1, "Manually choose" = 2),
+                                          selected = 1),
+                             conditionalPanel(
+                               condition = "input.mode_k_choice == 1",
+                               numericInput("rate_var_explan", label = h4("Rate of explained variance"), value = 0.9),
+                               numericInput("maxK", label = h4("Max number of clusters"), value = 20)
+                             ),
+                             conditionalPanel(
+                               condition = "input.mode_k_choice == 2",
+                               numericInput("k", label = h4("Choose number of clusters"), value = 8)
+                             ),
+                             uiOutput("mk_subset_clusterisation_ui"),
+                             actionButton('start_clusterization', label = "Clustering")
                     ),
                     tabPanel("cluster management",
                     ),

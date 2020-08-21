@@ -350,6 +350,17 @@ cytofBrowser_server <- function(input, output){
     colnames(gates$gates)[colnames(gates$gates) == input$gated_node_id] <- input$new_gate_name_gating
   })
 
+  ########################
+  ###    Clustering    ###
+  ########################
+
+  ##### Create UI to choose excluded markers from clusterisation
+  output$mk_subset_clusterisation_ui <- renderUI({
+    if(is.null(fcs_data$use_markers)){return(NULL)}
+    selectInput("exclude_mk_clusterisation", label = "Exclude markers from clustering",
+                choices = names(fcs_data$use_markers),
+                multiple = TRUE)
+  })
 
 }
 
