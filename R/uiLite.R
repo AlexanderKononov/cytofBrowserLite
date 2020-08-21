@@ -15,7 +15,8 @@ cytofBrowserGUI <-function(){
     shinydashboard::dashboardSidebar(
       shinydashboard::sidebarMenu(
         shinydashboard::menuItem("Data", tabName = 'data_processing', icon = icon("bars")),
-        shinydashboard::menuItem("Gating", tabName = 'gating', icon = icon("door-open")),
+        shinydashboard::menuItem("Gating", tabName = 'gating', icon = icon("object-group")),
+        shinydashboard::menuItem("Clustering", tabName = 'data_clustering', icon = icon("spinner")),
         shinydashboard::menuItem("Exploration", tabName = 'data_exploration', icon = icon("chart-area")),
         shinydashboard::menuItem("Correlation", tabName = 'data_correlation', icon = icon("braille")),
         shinydashboard::menuItem("Cross-panel", tabName = 'data_crosspanel', icon = icon("clone"))
@@ -165,6 +166,26 @@ cytofBrowserGUI <-function(){
         ),
 
         # Third tab content
+        tabItem(tabName = 'data_clustering',
+                fluidRow(
+                  tabBox(
+                    tabPanel("clustering",
+                    ),
+                    tabPanel("cluster management",
+                    ),
+                    tabPanel("Cells management",
+
+                    ),
+                    tabPanel("Save",
+                    )
+                  ),
+                  shinydashboard::box(
+
+                  )
+                ),)
+        ),
+
+        # Fourth tab content
         tabItem(tabName = 'data_exploration',
                 fluidRow(
                   shinydashboard::box(
@@ -177,7 +198,7 @@ cytofBrowserGUI <-function(){
                 )
         ),
 
-        # Fourth tab content
+        # Fifth tab content
         tabItem(tabName = 'data_correlation',
                 fluidRow(
 
@@ -204,7 +225,7 @@ cytofBrowserGUI <-function(){
                 )
         ),
 
-        # Fifth tab content
+        # Sixth tab content
         tabItem(tabName = 'data_crosspanel',
                 fluidRow(
                   tabBox(
