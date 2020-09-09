@@ -196,7 +196,8 @@ cytofBrowserGUI <-function(){
                   shinydashboard::box(
 
                   )
-                ),)
+                ),
+                )
         ),
 
         # Fourth tab content
