@@ -12,7 +12,7 @@ get_modif_sparse_data_gating(
 \arguments{
 \item{gated_data_subset}{matrix of data for adjusting}
 
-\item{mk}{column in matrix for adjusting and ploting}
+\item{mk}{column in matrix for adjusting and plotting}
 }
 \value{
 

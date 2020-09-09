@@ -128,7 +128,7 @@ cytofBrowserGUI <-function(){
         ),
 
         # Second tab content
-        tabItem(tabName = 'gating',
+        shinydashboard::tabItem(tabName = 'gating',
                 fluidRow(
                   tabBox(
                     tabPanel("Gating",
@@ -166,7 +166,7 @@ cytofBrowserGUI <-function(){
         ),
 
         # Third tab content
-        tabItem(tabName = 'data_clustering',
+        shinydashboard::tabItem(tabName = 'data_clustering',
                 fluidRow(
                   tabBox(
                     tabPanel("clustering",
@@ -196,7 +196,6 @@ cytofBrowserGUI <-function(){
                   shinydashboard::box(
 
                   )
-                ),
                 )
         ),
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/Data_preparation.R
 \name{get_use_marker}
 \alias{get_use_marker}
-\title{filtering out technical markers}
+\title{Filtering out technical markers}
 \usage{
 get_use_marker(panel)
 }

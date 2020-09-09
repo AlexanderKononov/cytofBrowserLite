@@ -2,7 +2,7 @@
 % Please edit documentation in R/Data_preparation.R
 \name{get_new_fcs_names}
 \alias{get_new_fcs_names}
-\title{Get new names with prefix for samples to save}
+\title{Get new names with additional prefix for samples to save}
 \usage{
 get_new_fcs_names(old_name, folder_path, prefix = "")
 }
@@ -17,5 +17,5 @@ get_new_fcs_names(old_name, folder_path, prefix = "")
 
 }
 \description{
-Get new names with prefix for samples to save
+Get new names with additional prefix for samples to save
 }

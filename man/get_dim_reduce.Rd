@@ -2,7 +2,7 @@
 % Please edit documentation in R/Data_preparation.R
 \name{get_dim_reduce}
 \alias{get_dim_reduce}
-\title{Preparing data to dimentional reduce plot}
+\title{Preparing data to dimensional reduce plot}
 \usage{
 get_dim_reduce(
   exprs_data,
@@ -48,5 +48,5 @@ get_dim_reduce(
 
 }
 \description{
-Preparing data to dimentional reduce plot
+Preparing data to dimensional reduce plot
 }

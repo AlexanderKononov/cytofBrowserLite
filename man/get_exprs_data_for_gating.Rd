@@ -2,7 +2,7 @@
 % Please edit documentation in R/Gating.R
 \name{get_exprs_data_for_gating}
 \alias{get_exprs_data_for_gating}
-\title{extract data table for plot to gate}
+\title{Extract data table for plot to gate}
 \usage{
 get_exprs_data_for_gating(exprs_data, gating_subset, gating_mk1, gating_mk2)
 }
@@ -19,5 +19,5 @@ get_exprs_data_for_gating(exprs_data, gating_subset, gating_mk1, gating_mk2)
 
 }
 \description{
-extract data table for plot to gate
+Extract data table for plot to gate
 }
