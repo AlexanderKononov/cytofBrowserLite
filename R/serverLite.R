@@ -310,10 +310,10 @@ cytofBrowser_server <- function(input, output){
     nodes <- data.frame(id = gates$antology$name, label = gates$antology$name)
     edges <- data.frame(from = gates$antology$parent, to = gates$antology$name)
     edges <- edges[!is.na(edges$from),]
-    visNetwork::visNetwork(nodes, edges) %>%
-      visNetwork::visInteraction(hover = TRUE) %>%
-      visNetwork::visEvents(select = "function(nodes) { Shiny.onInputChange('gated_node_id', nodes.nodes);}") %>%
-      visNetwork::visHierarchicalLayout()
+    net <- visNetwork::visNetwork(nodes, edges)
+    net <- visNetwork::visInteraction(net, hover = TRUE)
+    net <- visNetwork::visEvents(net, select = "function(nodes) { Shiny.onInputChange('gated_node_id', nodes.nodes);}")
+    visNetwork::visHierarchicalLayout(net)
   })
 
   ### Allocation a new gate
