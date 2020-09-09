@@ -182,8 +182,8 @@ cytofBrowserGUI <-function(){
                                condition = "input.mode_k_choice == 2",
                                numericInput("k", label = h4("Choose number of clusters"), value = 8)
                              ),
-                             uiOutput("mk_subset_clusterisation_ui"),
-                             actionButton('start_clusterization', label = "Clustering")
+                             uiOutput("mk_subset_clusters_ui"),
+                             actionButton('start_clustering', label = "Clustering")
                     ),
                     tabPanel("cluster management",
                     ),
@@ -194,7 +194,40 @@ cytofBrowserGUI <-function(){
                     )
                   ),
                   shinydashboard::box(
+                    fluidRow(
+                      column(2, actionBttn(inputId = "redraw_dp", style = "material-circle", color = "default" ,icon = icon("redo"))),
+                      column(2,
+                             dropdownButton(
+                               tags$h4("Options of plotting"),
+                               numericInput('sampling_size', label = h5("Cell fraction to display"), value = 0.5, step = 0.1),
+                               materialSwitch(inputId = 'fuse', label = h4("Size fuse"), value = TRUE),
+                               selectInput("method_plot_dp", label = h5("Visualisation method"),
+                                           choices = list("tSNE" = "tSNE", "UMAP" = "UMAP"),selected = "tSNE"),
+                               numericInput('point_size', label = h5("Size of points"), value = 0.3, step = 0.1),
+                               icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                             )
+                      ),
+                      column(2,
+                             dropdownButton(
+                               tags$h4("Advanced options"),
+                               uiOutput('advanced_opt_dp_ui'),
+                               icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                             )
 
+                      ),
+                      column(2,
+                             dropdownButton(
+                               selectInput('dwn_scatter_dp_ext', label = NULL,
+                                           choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                          'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                               downloadButton('dwn_scatter_dp', ""),
+                               icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                             )
+
+                      )
+                    ),
+                    plotOutput('scatter_plot_clust'),
+                    uiOutput('mk_scatter_clust_ui')
                   )
                 )
         ),

@@ -21,11 +21,13 @@ cytofBrowser_server <- function(input, output){
   roots <- c(Home = path.expand("~"), "R Installation" = R.home(), shinyFiles::getVolumes()())
   shinyFiles::shinyFileChoose(input, 'choose_fcs_dp', roots=roots, filetypes=c('', 'fcs'))
 
-  ##### Create "fcs_data" as reactive object to store the CyTOF data
+  ##### Create reactive object to store the CyTOF data
   fcs_data <-reactiveValues()
-  gates <- reactiveValues()
   data_prep_settings <- reactiveValues(sampling_size = 0.5, fuse = TRUE, size_fuse = 3000, method = "tSNE",
                                        perplexity = 30, theta = 0.5, max_iter = 1000)
+  gates <- reactiveValues()
+  clusters <- reactiveValues()
+  cluster_settings <- reactiveValues(perplexity = 30, theta = 0.5, max_iter = 1000, size_fuse = 5000)  #########   ?????
   plots <- reactiveValues()
 
 
@@ -355,11 +357,96 @@ cytofBrowser_server <- function(input, output){
   ########################
 
   ##### Create UI to choose excluded markers from clusterisation
-  output$mk_subset_clusterisation_ui <- renderUI({
+  output$mk_subset_clusters_ui <- renderUI({
     if(is.null(fcs_data$use_markers)){return(NULL)}
-    selectInput("exclude_mk_clusterisation", label = "Exclude markers from clustering",
-                choices = names(fcs_data$use_markers),
-                multiple = TRUE)
+    selectInput('exclude_mk_clusters', label = "Exclude markers from clustering",
+                choices = names(fcs_data$use_markers), multiple = TRUE)
+  })
+
+  ##### Action on the Clustering button
+  observeEvent(input$start_clustering, {
+    withProgress(message = "Clustering", min =0, max = 5, value = 0,{
+      ## Clustering with set parameters
+      clusters$clust_markers <- fcs_data$use_markers[!(names(fcs_data$use_markers) %in% input$exclude_mk_clusters)]
+      if(input$mode_k_choice == 1){k <- input$maxK}
+      if(input$mode_k_choice == 2){k <- input$k}
+      som <- get_som(fcs_data$fcs_raw, clusters$clust_markers, seed = 1234)
+      incProgress(1, detail = "clustering")
+      mc <- get_consensusClust(som, maxK = k)
+      incProgress(1, detail = "extration of cluster set")
+      clusters$clusters <- get_all_consensusClust(mc)
+      if(input$mode_k_choice == 1){k <- get_optimal_clusters(mc, rate_var_expl = input$rate_var_explan)}
+      fcs_data$cell_ann$clusters <- clusters$clusters[,as.character(k)]
+
+      incProgress(1, detail = "distance between clusters")
+      ## Estimation of the distance between clusters
+      clusters$clus_euclid_dist <- get_euclid_dist(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
+                                                   cell_clustering = fcs_data$cell_ann$clusters)
+      incProgress(1, detail = "graph elements")
+      ## Calculation of edges and nodes for graph
+      clusters$edges <- get_edges(clusters$clus_euclid_dist)
+      clusters$nodes <- get_nodes(clusters$edges, fcs_data$cell_ann$clusters)
+      incProgress(1, detail = "drawing scatter plot")
+
+
+      ### Create a data frame to UMAP or tSNE plotting
+      #if(!is.null(input$cluster_perplexity)){cluster_settings$perplexity <- input$cluster_perplexity}
+      #if(!is.null(input$cluster_theta)){cluster_settings$theta <- input$cluster_theta}
+      #if(!is.null(input$cluster_max_iter)){cluster_settings$max_iter <- input$cluster_max_iter}
+      #sampling_size <- 0.5
+      #method <- "UMAP"
+      #if(!is.null(input$n_cell_plot_clasterisation)){sampling_size <- as.numeric(input$n_cell_plot_clasterisation)}
+      #if(!is.null(input$method_plot_clasterisation)){method <- input$method_plot_clasterisation}
+      #tsne_inds <- get_inds_subset(fcs_data$fcs_raw, sampling_size = sampling_size, size_fuse = cluster_settings$size_fuse)
+      #clusters$umap_df <- get_UMAP_dataframe(fcs_raw = fcs_data$fcs_raw, use_markers = fcs_data$use_markers,
+      #                                             clust_markers = clusters$clust_markers, tsne_inds = tsne_inds,
+      #                                             cell_clustering = clusters$cell_clustering, method = method,
+      #                                             perplexity = cluster_settings$perplexity,
+      #                                             theta = cluster_settings$theta, max_iter = cluster_settings$max_iter)
+      #clusters$abundance_df <- get_abundance_dataframe(fcs_raw = fcs_data$fcs_raw,
+      #                                                       cell_clustering = clusters$cell_clustering)
+      ### Add cluster data to cell type data frame
+      #ctype$ctype$cell_clustering <- clusters$cell_clustering
+      #incProgress(1)
+    })
+  })
+
+
+  ##### UI to choose marker for scatter plot with clusters
+  output$mk_scatter_clust_ui <- renderUI({
+    if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
+    selectInput("mk_target_clusters", label = h4("Plotted marker"),
+                choices = c("clusters", names(fcs_data$use_markers)),selected = 1)
+  })
+
+  ##### Drawing the reactive and interactive UMAP plot
+  output$scatter_plot_clust <- renderPlot({
+
+    if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
+    if(is.null(fcs_data$subset_coord)){return(NULL)}
+    color_mk <- "clusters"
+    if(!is.null(input$mk_target_clusters)){color_mk <- input$mk_target_clusters}
+    if(color_mk %in% names(fcs_data$use_markers)){color_mk <- fcs_data$use_markers[color_mk]}
+    if(data_prep_settings$method == "tSNE"){
+      plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "tSNE1"],
+                              Y = fcs_data$cell_ann[fcs_data$subset_coord, "tSNE2"])}
+    if(data_prep_settings$method == "UMAP"){
+      plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP1"],
+                              Y = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP2"])}
+    if(color_mk == "clusters"){plot_data$mk <- as.factor(fcs_data$cell_ann[fcs_data$subset_coord, "clusters"])}
+    if(color_mk != "clusters"){plot_data$mk <- fcs_data$exprs_data[fcs_data$subset_coord, color_mk]}
+    focus_node <- input$current_node_id
+
+    plt <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
+      geom_point(size = input$point_size)
+    if(color_mk == "clusters"){plt <- plt + scale_color_manual(values = as.character(clusters$nodes$color))}
+    if(color_mk != "clusters"){plt <- plt + scale_color_gradient2(midpoint=0.5, low='blue', mid='gray', high='red')}
+    plt <- plt + geom_point(data = plot_data[fcs_data$cell_ann[fcs_data$subset_coord, "clusters"] == focus_node,],
+                            colour = 'black', size = (input$point_size*1.5))+
+      labs(color = color_mk) +
+      theme_bw()
+    plots$scatter_clust <- plt
+    return(plt)
   })
 
 }
