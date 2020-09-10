@@ -4,7 +4,7 @@
 \alias{get_consensusClust}
 \title{Get mc consensusCluster object from ConsensusClusterPlus}
 \usage{
-get_consensusClust(som, maxK = 20)
+get_consensusClust(som, maxK = 20, seed = 1234)
 }
 \arguments{
 \item{som}{som object from FlowSOM package}

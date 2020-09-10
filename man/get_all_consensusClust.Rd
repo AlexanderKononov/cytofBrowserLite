@@ -4,7 +4,7 @@
 \alias{get_all_consensusClust}
 \title{Extration clustering information for all calculated k in ConsensusClustPluse}
 \usage{
-get_all_consensusClust(mc)
+get_all_consensusClust(som, mc)
 }
 \arguments{
 \item{mc}{ConsensusClusterPlus object}
