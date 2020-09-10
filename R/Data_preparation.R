@@ -24,7 +24,7 @@ get_fcs_metadata <- function(fcs_files){
 
 ### test
 #md <- get_fcs_metadata(c("./../test_data/c13_20190704_hnp_perf_11_0_Alex2.fcs","./../test_data/c14_20190704_hnp_perf_11_0_Alex2.fcs",
-#                        "./../test_data/c13_20190704_hnp_perf_11_0_Alez1.fcs","./../test_data/c14_20190704_hnp_perf_11_0_Alez1.fcs"))
+#                       "./../test_data/c13_20190704_hnp_perf_11_0_Alez1.fcs","./../test_data/c14_20190704_hnp_perf_11_0_Alez1.fcs"))
 #md <- get_fcs_metadata("./../../Toni_data/EC_200117_Freshly labelled PBMCs _1_0/Activation_Activation full panel unstim TILs_033.fcs")
 #md <- get_fcs_metadata("./../../cytofBrowser_project/Tape_data/Figure-1_S2_S3_raw/Figure-1_S2_S3_processed.fcs")
 
@@ -159,22 +159,6 @@ get_entire_panel <- function(fcs_raw){
 
 ### test
 #entire_panel <- get_entire_panel(fcs_raw)
-
-
-#' Upload data from fcs files to write flowSet object, panel and use_marker
-#'
-#' @param fcs_files list of path to FCS files
-#'
-#' @return list with three elements: flowSet object, panel info and use_marker vector
-#' @export
-#'
-upload_fcs_data <- function(fcs_files){
-  md <- get_fcs_metadata(fcs_files)
-  fcs_raw <- get_fcs_raw(md)
-  panel <- get_fcs_panel(fcs_raw)
-  use_markers <- get_use_marker(panel)
-  return(list(fcs_raw,md, panel, use_markers))
-}
 
 
 #' Transformation exprs matrix by asinh fransformation

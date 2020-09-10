@@ -25,4 +25,8 @@ Imports:
     stats,
     shinyFiles,
     grDevices,
-    visNetwork
+    visNetwork,
+    ConsensusClusterPlus,
+    FlowSOM,
+    utils,
+    RColorBrewer
