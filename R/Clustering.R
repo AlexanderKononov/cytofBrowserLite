@@ -28,11 +28,11 @@ get_som <- function(fcs_raw, clust_markers, seed = 1234){
 #' @return ConsensusClusterPlus object from the same package
 #' @importFrom ConsensusClusterPlus ConsensusClusterPlus
 #'
-get_consensusClust <- function(som, maxK = 20){
+get_consensusClust <- function(som, maxK = 20, seed = 1234){
   mc <- ConsensusClusterPlus::ConsensusClusterPlus(t(som$map$codes), maxK = maxK, reps = 100,
                              pItem = 0.9, pFeature = 1, title = "consensus_plots", plot = "png",
                              clusterAlg = "hc", innerLinkage = "average", finalLinkage = "average",
-                             distance = "euclidean", seed = 1234)
+                             distance = "euclidean", seed = seed)
   return(mc)
 }
 
@@ -45,13 +45,29 @@ get_consensusClust <- function(som, maxK = 20){
 #'
 #' @return matrix with row per cell and colomn for each clustering run of ConsensusCluster
 #'
-get_all_consensusClust <- function(mc){
+get_all_consensusClust <- function(som, mc){
+  print("===1")
+  print(length(mc))
   all_clusters <- lapply(2:length(mc), function(x){
+    print("------------")
+    print(x)
+    print(str(mc[[x]]))
+    print(mc[[x]]$consensusClass)
     code_clustering <- mc[[x]]$consensusClass
+    print("---")
+    print(str(code_clustering))
+    print(length(som))
+    print(dim(som$map$mapping))
+    print(length(som$map$mapping[,1]))
+    print(length(code_clustering[som$map$mapping[,1]]))
     cell_clustering <- code_clustering[som$map$mapping[,1]]
+    return(cell_clustering)
   })
+  print("===2")
   all_clusters <- as.data.frame(all_clusters)
+  print("===3")
   colnames(all_clusters) <- as.character(2:length(mc))
+  print("===4")
   return(all_clusters)
 }
 

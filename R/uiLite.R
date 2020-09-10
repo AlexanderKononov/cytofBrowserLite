@@ -195,32 +195,32 @@ cytofBrowserGUI <-function(){
                   ),
                   shinydashboard::box(
                     fluidRow(
-                      column(2, actionBttn(inputId = "redraw_dp", style = "material-circle", color = "default" ,icon = icon("redo"))),
+                      column(2, actionBttn(inputId = "redraw_clust", style = "material-circle", color = "default" ,icon = icon("redo"))),
                       column(2,
                              dropdownButton(
                                tags$h4("Options of plotting"),
-                               numericInput('sampling_size', label = h5("Cell fraction to display"), value = 0.5, step = 0.1),
-                               materialSwitch(inputId = 'fuse', label = h4("Size fuse"), value = TRUE),
-                               selectInput("method_plot_dp", label = h5("Visualisation method"),
+                               numericInput('sampling_size_clust', label = h5("Cell fraction to display"), value = 0.5, step = 0.1),
+                               materialSwitch(inputId = 'fuse_clust', label = h4("Size fuse"), value = TRUE),
+                               selectInput("method_plot_clust", label = h5("Visualisation method"),
                                            choices = list("tSNE" = "tSNE", "UMAP" = "UMAP"),selected = "tSNE"),
-                               numericInput('point_size', label = h5("Size of points"), value = 0.3, step = 0.1),
+                               numericInput('point_size_clust', label = h5("Size of points"), value = 0.3, step = 0.1),
                                icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
                              )
                       ),
                       column(2,
                              dropdownButton(
                                tags$h4("Advanced options"),
-                               uiOutput('advanced_opt_dp_ui'),
+                               uiOutput('advanced_opt_clust_ui'),
                                icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
                              )
 
                       ),
                       column(2,
                              dropdownButton(
-                               selectInput('dwn_scatter_dp_ext', label = NULL,
+                               selectInput('dwn_scatter_clust_ext', label = NULL,
                                            choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
                                                           'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
-                               downloadButton('dwn_scatter_dp', ""),
+                               downloadButton('dwn_scatter_clust', ""),
                                icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
                              )
 

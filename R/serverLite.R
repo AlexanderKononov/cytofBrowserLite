@@ -27,7 +27,7 @@ cytofBrowser_server <- function(input, output){
                                        perplexity = 30, theta = 0.5, max_iter = 1000)
   gates <- reactiveValues()
   clusters <- reactiveValues()
-  cluster_settings <- reactiveValues(perplexity = 30, theta = 0.5, max_iter = 1000, size_fuse = 5000)  #########   ?????
+  cluster_settings <- reactiveValues(perplexity = 30, theta = 0.5, max_iter = 1000, size_fuse = 5000)
   plots <- reactiveValues()
 
 
@@ -372,9 +372,9 @@ cytofBrowser_server <- function(input, output){
       if(input$mode_k_choice == 2){k <- input$k}
       som <- get_som(fcs_data$fcs_raw, clusters$clust_markers, seed = 1234)
       incProgress(1, detail = "clustering")
-      mc <- get_consensusClust(som, maxK = k)
+      mc <- get_consensusClust(som, maxK = k, seed = 1234)
       incProgress(1, detail = "extration of cluster set")
-      clusters$clusters <- get_all_consensusClust(mc)
+      clusters$clusters <- get_all_consensusClust(som = som, mc = mc)
       if(input$mode_k_choice == 1){k <- get_optimal_clusters(mc, rate_var_expl = input$rate_var_explan)}
       fcs_data$cell_ann$clusters <- clusters$clusters[,as.character(k)]
 
@@ -419,6 +419,24 @@ cytofBrowser_server <- function(input, output){
                 choices = c("clusters", names(fcs_data$use_markers)),selected = 1)
   })
 
+  ##### UI for advanced options data preparation
+  output$advanced_opt_clust_ui <- renderUI({
+    if(is.null(input$method_plot_clust)){return(NULL)}
+    if(is.null(input$method_plot_clust)){return(NULL)}
+    if(input$method_plot_clust == 'tSNE'){
+      ui <- fluidRow(
+        column(1),
+        column(10,
+               numericInput("perplexity_clust", "tSNE Perplexity", min = 0, max = 200, value = 30, step = 5),
+               numericInput("theta_clust", "tSNE Theta", min = 0, max = 1, value = 0.5, step = 0.1),
+               numericInput("max_iter_clust", "tSNE Iterations", value = 1000, step = 500)
+        )
+      )
+    }
+    if(input$method_plot_clust == 'UMAP'){ui <- NULL}
+    return(ui)
+  })
+
   ##### Drawing the reactive and interactive UMAP plot
   output$scatter_plot_clust <- renderPlot({
 
@@ -438,16 +456,58 @@ cytofBrowser_server <- function(input, output){
     focus_node <- input$current_node_id
 
     plt <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
-      geom_point(size = input$point_size)
+      geom_point(size = input$point_size_clust)
     if(color_mk == "clusters"){plt <- plt + scale_color_manual(values = as.character(clusters$nodes$color))}
     if(color_mk != "clusters"){plt <- plt + scale_color_gradient2(midpoint=0.5, low='blue', mid='gray', high='red')}
     plt <- plt + geom_point(data = plot_data[fcs_data$cell_ann[fcs_data$subset_coord, "clusters"] == focus_node,],
-                            colour = 'black', size = (input$point_size*1.5))+
+                            colour = 'black', size = (input$point_size_clust*1.5))+
       labs(color = color_mk) +
       theme_bw()
     plots$scatter_clust <- plt
     return(plt)
   })
+
+  ##### Rewrite for scatter plot
+  observeEvent(input$redraw_clust, {
+    withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
+      incProgress(1, detail = "Subsampling" )
+      ## If subset was changed
+      if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size_clust, input$fuse_clust))){
+        if(!is.null(input$sampling_size_clust)){data_prep_settings$sampling_size <- input$sampling_size_clust}
+        if(!is.null(input$fuse_clust)){data_prep_settings$fuse <- input$fuse_clust}
+        fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
+                                                  sampling_size = data_prep_settings$sampling_size,
+                                                  fuse = data_prep_settings$fuse,
+                                                  size_fuse = data_prep_settings$size_fuse)
+      }
+      ## Repeat dimension reducing
+      incProgress(1, detail = "Dimention redicing" )
+      dim_reduce_force <- FALSE
+      if(!is.null(input$method_plot_clust)){data_prep_settings$method <- input$method_plot_clust; dim_reduce_force <- TRUE}
+      if(!is.null(input$perplexity_clust)){data_prep_settings$perplexity <- input$perplexity_clust; dim_reduce_force <- TRUE}
+      if(!is.null(input$theta_clust)){data_prep_settings$theta <- input$theta_clust; dim_reduce_force <- TRUE}
+      if(!is.null(input$max_iter_clust)){data_prep_settings$max_iter <- input$max_iter_clust; dim_reduce_force <- TRUE}
+      fcs_data$cell_ann <- get_dim_reduce(fcs_data$exprs_data, fcs_data$cell_ann,
+                                          fcs_data$subset_coord, fcs_data$use_markers,force = dim_reduce_force,
+                                          method = data_prep_settings$method, perplexity = data_prep_settings$perplexity,
+                                          theta = data_prep_settings$theta, max_iter = data_prep_settings$max_iter,
+                                          pca_param = FALSE, check_duplicates = FALSE, seed = 1234)
+      incProgress(1, detail = "Plotting" )
+    })
+  })
+
+  ##### Download scatter plot data preparation
+  output$dwn_scatter_clust <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_scatter_clust_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Scatter_plot_clustering", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_scatter_clust_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggplot2::ggsave(file, plot = plots$scatter_clust, device = ext)
+    }
+  )
 
 }
 
