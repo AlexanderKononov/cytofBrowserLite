@@ -146,23 +146,24 @@ cytofBrowser_server <- function(input, output){
 
 
   ##### UI for saving cell annotation as fcs files
-  output$save_cell_ann_ui <- renderUI({
+  output$save_cell_ann_dp_ui <- renderUI({
     if(is.null(fcs_data$cell_ann)){return(NULL)}
     selectInput('save_cell_ann_dp', label = h5("Adding cell annotation to FCS files"),
                 choices = colnames(fcs_data$cell_ann), multiple = TRUE)
   })
 
 
-  ##### Save sample data with cluster info as panal files
-  shinyDirChoose(input, 'choose_panel_clust', roots = roots)
-  observeEvent(input$dwn_panel_clust, {
-    if(is.null(fcs_data$fcs_raw)){return(NULL)}
-    panel_folder_path <- parseDirPath(roots, input$choose_panel_clust)
+  ##### Save data as fcs files
+  shinyDirChoose(input, 'choose_dwn_folder_dp', roots = roots)
+  observeEvent(input$dwn_fcs_dp, {
+    if(is.null(fcs_data$fcs_raw) | is.null(input$choose_dwn_folder_dp)){return(NULL)}
+    panel_folder_path <- parseDirPath(roots, input$choose_dwn_folder_dp)
+    if(length(panel_folder_path) == 0){return(NULL)}
     if(!is.null(panel_folder_path) | length(panel_folder_path) !=0 ){
-      filenames <- get_new_fcs_names(old_name = paste0(flowCore::sampleNames(fcs_raw), ".fcs"),
-                                     folder_path = panel_folder_path, prefix = input$name_prefix)
-      new_fcs <- get_clustered_fcs_files(fcs_raw = fcs_data$fcs_raw, cell_ann = fcs_data$cell_ann,
-                                         column_name = input$save_cell_ann_dp)
+      filenames <- get_new_fcs_names(old_name = paste0(flowCore::sampleNames(fcs_data$fcs_raw), ".fcs"),
+                                     folder_path = panel_folder_path, prefix = input$name_prefix_dp)
+      new_fcs <- get_ann_adding_fcs_files(fcs_raw = fcs_data$fcs_raw, cell_ann = fcs_data$cell_ann,
+                                         col_name = input$save_cell_ann_dp)
       flowCore::write.flowSet(new_fcs, outdir = as.character(panel_folder_path), filename = filenames)
     }
   })
@@ -387,27 +388,6 @@ cytofBrowser_server <- function(input, output){
       clusters$edges <- get_edges(clusters$clus_euclid_dist)
       clusters$nodes <- get_nodes(clusters$edges, fcs_data$cell_ann$clusters)
       incProgress(1, detail = "drawing scatter plot")
-
-
-      ### Create a data frame to UMAP or tSNE plotting
-      #if(!is.null(input$cluster_perplexity)){cluster_settings$perplexity <- input$cluster_perplexity}
-      #if(!is.null(input$cluster_theta)){cluster_settings$theta <- input$cluster_theta}
-      #if(!is.null(input$cluster_max_iter)){cluster_settings$max_iter <- input$cluster_max_iter}
-      #sampling_size <- 0.5
-      #method <- "UMAP"
-      #if(!is.null(input$n_cell_plot_clasterisation)){sampling_size <- as.numeric(input$n_cell_plot_clasterisation)}
-      #if(!is.null(input$method_plot_clasterisation)){method <- input$method_plot_clasterisation}
-      #tsne_inds <- get_inds_subset(fcs_data$fcs_raw, sampling_size = sampling_size, size_fuse = cluster_settings$size_fuse)
-      #clusters$umap_df <- get_UMAP_dataframe(fcs_raw = fcs_data$fcs_raw, use_markers = fcs_data$use_markers,
-      #                                             clust_markers = clusters$clust_markers, tsne_inds = tsne_inds,
-      #                                             cell_clustering = clusters$cell_clustering, method = method,
-      #                                             perplexity = cluster_settings$perplexity,
-      #                                             theta = cluster_settings$theta, max_iter = cluster_settings$max_iter)
-      #clusters$abundance_df <- get_abundance_dataframe(fcs_raw = fcs_data$fcs_raw,
-      #                                                       cell_clustering = clusters$cell_clustering)
-      ### Add cluster data to cell type data frame
-      #ctype$ctype$cell_clustering <- clusters$cell_clustering
-      #incProgress(1)
     })
   })
 

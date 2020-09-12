@@ -318,21 +318,13 @@ get_dim_reduce <- function(exprs_data, cell_ann, subset_coord, use_markers, forc
 #' @return
 #'
 get_new_fcs_names <- function(old_name, folder_path, prefix = ""){
-  new_names <- paste0(prefix,old_name)
+  if(prefix == "" | is.null(prefix)){prefix <- "CyBr"}
+  new_names <- paste(prefix, old_name, sep = "_")
   ovrlp <- new_names %in% list.files(folder_path)
-  if(any(ovrlp) & (prefix == "")){
-    prefix <- "CyBr"
-    new_names[ovrlp] <- paste0(prefix,old_name[ovrlp])
-    ovrlp <- new_names %in% list.files(folder_path)
-  }
-  quantity <- 0
-  while (any(ovrlp)) {
+  quantity <- 1
+  while (any(ovrlp)){
     quantity <- quantity +1
-    if (quantity == 1){new_names[ovrlp] <- gsub(prefix, paste0(prefix,"2"),new_names[ovrlp])}
-    if (quantity > 1){
-      new_names[ovrlp] <- gsub(paste0(prefix, as.character(quantity)),
-                               paste0(prefix, as.character(quantity+1)),new_names[ovrlp])
-    }
+    new_names <- paste(paste0(prefix, quantity), old_name, sep = "_")
     ovrlp <- new_names %in% list.files(folder_path)
   }
   return(new_names)
@@ -346,20 +338,25 @@ get_new_fcs_names <- function(old_name, folder_path, prefix = ""){
 #'
 #' @param fcs_raw flowSet object
 #' @param cell_ann cell annotation table
-#' @param column_name vetor of column names from cell annotation data which we would like to add to fcs
+#' @param col_name vetor of column names from cell annotation data which we would like to add to fcs
 #'
 #' @return
 #' @importFrom flowCore sampleNames fr_append_cols
 #' @importClassesFrom flowCore flowSet
 #'
-get_clustered_fcs_files <- function(fcs_raw, cell_ann, column_name = c("cluster")){
-  format_cell_ann <- cell_ann
-  for (i in column_name){
-    format_cell_ann[,i] <- as.integer(as.factor(format_cell_ann[,i]))
+get_ann_adding_fcs_files <- function(fcs_raw, cell_ann, col_name = NULL){
+  if(is.null(col_name) | any(!(col_name %in% colnames(cell_ann)))){
+    print(paste0("Annotations ", col_name[!(col_name %in% colnames(cell_ann))], " didn't add to files."))
+    return(fcs_raw)
   }
+  format_cell_ann <- lapply(col_name, function(x){
+    as.integer(as.factor(cell_ann[,x]))
+  })
+  format_cell_ann <- as.data.frame(format_cell_ann)
+  colnames(format_cell_ann) <- col_name
   new_fcs <- lapply(flowCore::sampleNames(fcs_raw), function(s) {
-    addition_col <- as.matrix(format_cell_ann[cell_ann$samples == s, column_name])
-    colnames(addition_col) <- column_name
+    addition_col <- as.matrix(format_cell_ann[cell_ann$samples == s, col_name])
+    colnames(addition_col) <- col_name
     flowCore::fr_append_cols(fcs_raw[[s]], addition_col)
   })
   names(new_fcs) <- flowCore::sampleNames(fcs_raw)
