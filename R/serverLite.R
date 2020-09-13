@@ -275,6 +275,9 @@ cytofBrowser_server <- function(input, output){
     if(!is.null(input$mk_density_dp)){color_mk <- input$mk_density_dp}
     plot_data <- data.frame(expr_data = exprs_data[,use_markers[color_mk]])
     plot_data[,"expr_data"] <- as.numeric(plot_data[,"expr_data"])
+    if(input$mk_zero_del_density_plot_dp){
+      plot_data <- data.frame(expr_data = plot_data$expr_data[plot_data$expr_data != 0])
+    }
     plots$mk_density <- ggplot(plot_data, aes(x = expr_data))+
       geom_density(fill = 'black')+
       labs(x = color_mk)+

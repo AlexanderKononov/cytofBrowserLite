@@ -127,6 +127,11 @@ cytofBrowserGUI <-function(){
                                       ),
                                column(2,
                                       dropdownButton(
+                                        tags$h4("Advanced options"),
+                                        checkboxInput("mk_zero_del_density_plot_dp", label = "Remove zero expressions", value = FALSE),
+                                        icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                                      ),
+                                      dropdownButton(
                                         selectInput('dwn_mk_density_dp_ext', label = NULL,
                                                     choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
                                                                    'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
