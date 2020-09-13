@@ -299,6 +299,12 @@ cytofBrowser_server <- function(input, output){
     }
   )
 
+  ##### Reactive show current use_markers from "fcs_data" object
+  output$mk_rested_dp <- renderPrint({fcs_data$use_markers})
+  output$mk_excluded_dp <- renderPrint({
+    fcs_data$entire_panel[!(fcs_data$entire_panel %in% fcs_data$use_markers)]
+  })
+
   ########################
   ###      Gating      ###
   ########################

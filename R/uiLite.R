@@ -142,7 +142,10 @@ cytofBrowserGUI <-function(){
                              )
                     ),
                     tabPanel("Markers",
-
+                             h4("Used markers"),
+                             verbatimTextOutput('mk_rested_dp'),
+                             h4("Unused markers"),
+                             verbatimTextOutput('mk_excluded_dp')
                     ),
                     tabPanel("Abundance",
                     )
