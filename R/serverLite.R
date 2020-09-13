@@ -144,6 +144,33 @@ cytofBrowser_server <- function(input, output){
     })
   })
 
+  ##### Create UI to choose excluded markers
+  output$mk_subset_dp_ui <- renderUI({
+    if(is.null(fcs_data$use_markers)|is.null(fcs_data$entire_panel)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             selectInput("exclude_mk_dp", label = "Exclude markers",
+                         choices = names(fcs_data$use_markers),
+                         multiple = TRUE),
+             selectInput("include_mk_dp", label = "Include markers",
+                         choices = names(fcs_data$entire_panel[!(fcs_data$entire_panel %in% fcs_data$use_markers)]),
+                         multiple = TRUE),
+             actionButton("change_mk_button", label = "Change")
+      )
+    )
+  })
+
+  ##### Update reactive object use_markers after marker changing
+  observeEvent(input$change_mk_button, {
+    if(!is.null(input$exclude_mk_dp)){
+      fcs_data$use_markers <- fcs_data$use_markers[!(names(fcs_data$use_markers) %in% input$exclude_mk_dp)]
+    }
+    if(!is.null(input$include_mk_dp)){
+      fcs_data$use_markers <- fcs_data$entire_panel[c(names(fcs_data$use_markers), input$include_mk_dp)]
+    }
+  })
+
 
   ##### UI for saving cell annotation as fcs files
   output$save_cell_ann_dp_ui <- renderUI({

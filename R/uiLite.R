@@ -56,7 +56,7 @@ cytofBrowserGUI <-function(){
                                     actionButton('butt_trans_dproc', label = "Transform")
                     ),
                     shiny::tabPanel("Markers",
-
+                                    uiOutput('mk_subset_dp_ui')
                     ),
                     shiny::tabPanel("Clustering",
 
