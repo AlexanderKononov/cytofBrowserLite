@@ -58,12 +58,6 @@ cytofBrowserGUI <-function(){
                     shiny::tabPanel("Markers",
                                     uiOutput('mk_subset_dp_ui')
                     ),
-                    shiny::tabPanel("Clustering",
-
-                    ),
-                    shiny::tabPanel("Cluster management",
-
-                    ),
                     shiny::tabPanel("Save",
                                     h5("Saving the data as FCS files "),
                                     shinyDirButton('choose_dwn_folder_dp', label = "Folder choose", title = "Folder for saving FCS files"),
@@ -95,7 +89,6 @@ cytofBrowserGUI <-function(){
                                uiOutput('advanced_opt_dp_ui'),
                                icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
                              )
-
                       ),
                       column(2,
                              dropdownButton(
@@ -105,7 +98,6 @@ cytofBrowserGUI <-function(){
                                downloadButton('dwn_scatter_dp', ""),
                                icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
                              )
-
                       )
                     ),
                     plotOutput('scatter_plot_dp'),
@@ -113,10 +105,36 @@ cytofBrowserGUI <-function(){
                   ),
                   tabBox(
                     tabPanel("Cell number",
+                             fluidRow(
+                               column(10,plotOutput("smpl_hist_preparation")),
+                               column(2,
+                                      dropdownButton(
+                                        selectInput('dwn_smpl_hist_dp_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                                   'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                                        downloadButton('dwn_smpl_hist_dp', ""),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
+                             )
 
                     ),
                     tabPanel("Expression",
-
+                             fluidRow(
+                               column(10,
+                                      uiOutput('mk_density_dp_ui'),
+                                      plotOutput('mk_density_plot_dp')
+                                      ),
+                               column(2,
+                                      dropdownButton(
+                                        selectInput('dwn_mk_density_dp_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                                   'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                                        downloadButton('dwn_mk_density_dp', ""),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
+                             )
                     ),
                     tabPanel("Markers",
 

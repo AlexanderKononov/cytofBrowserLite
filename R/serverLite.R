@@ -236,6 +236,65 @@ cytofBrowser_server <- function(input, output){
     }
   )
 
+  ##### Drawing the reactive plot of cell number
+  output$smpl_hist_preparation <- renderPlot({
+    if(is.null(fcs_data$cell_number)){return(NULL)}
+    plots$smpl_hist <- ggplot(data = fcs_data$cell_number, aes(x = smpl, y = cell_nmbr))+
+      geom_bar(stat="identity", fill = "black")+
+      xlab("Samples")+
+      ylab("Number of cells")+
+      theme_bw()+
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    return(plots$smpl_hist)
+  })
+
+  ##### Download plot of cell number data preparation
+  output$dwn_smpl_hist_dp <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_smpl_hist_dp_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Cell_number_plot_data_preparation", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_smpl_hist_dp_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggsave(file, plot = plots$smpl_hist, device = ext)
+    }
+  )
+
+  ##### Create UI to choose target marker for marker density plot
+  output$mk_density_dp_ui <- renderUI({
+    if(is.null(fcs_data$use_markers)){ return(NULL)}
+    selectInput('mk_density_dp', label = h5("Plotted marker"),
+                choices = names(fcs_data$use_markers), selected = 1)
+  })
+
+  ##### Drawing the reactive histogram plot of marker expression
+  output$mk_density_plot_dp <- renderPlot({
+    if(is.null(fcs_data$use_markers)){return(NULL)}
+    color_mk <- names(fcs_data$use_markers)[1]
+    if(!is.null(input$mk_density_dp)){color_mk <- input$mk_density_dp}
+    plot_data <- data.frame(expr_data = exprs_data[,use_markers[color_mk]])
+    plot_data[,"expr_data"] <- as.numeric(plot_data[,"expr_data"])
+    plots$mk_density <- ggplot(plot_data, aes(x = expr_data))+
+      geom_density(fill = 'black')+
+      labs(x = color_mk)+
+      theme_bw()
+    return(plots$mk_density)
+  })
+
+  ##### Download plot of marker histogram data preparation
+  output$dwn_mk_density_dp <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_mk_density_dp_ext
+      if(is.null(ext)){ext <- "pdf"}
+      print(paste("Marker_density_plot_data_preparation", ext, sep = "."))
+      return(paste("Marker_density_plot_data_preparation", ext, sep = ".")) },
+    content = function(file) {
+      ext <- input$dwn_mk_density_dp_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggsave(file, plot = plots$mk_density, device = ext)
+    }
+  )
 
   ########################
   ###      Gating      ###
