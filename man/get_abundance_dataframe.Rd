@@ -4,7 +4,11 @@
 \alias{get_abundance_dataframe}
 \title{Create the data table to draw the abundance barplot}
 \usage{
-get_abundance_dataframe(fcs_raw, cell_clustering)
+get_abundance_dataframe(
+  cell_ann,
+  samples_col = "samples",
+  clusters_col = "clusters"
+)
 }
 \arguments{
 \item{fcs_raw}{fcs object}

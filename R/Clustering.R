@@ -46,28 +46,13 @@ get_consensusClust <- function(som, maxK = 20, seed = 1234){
 #' @return matrix with row per cell and colomn for each clustering run of ConsensusCluster
 #'
 get_all_consensusClust <- function(som, mc){
-  print("===1")
-  print(length(mc))
   all_clusters <- lapply(2:length(mc), function(x){
-    print("------------")
-    print(x)
-    print(str(mc[[x]]))
-    print(mc[[x]]$consensusClass)
     code_clustering <- mc[[x]]$consensusClass
-    print("---")
-    print(str(code_clustering))
-    print(length(som))
-    print(dim(som$map$mapping))
-    print(length(som$map$mapping[,1]))
-    print(length(code_clustering[som$map$mapping[,1]]))
     cell_clustering <- code_clustering[som$map$mapping[,1]]
     return(cell_clustering)
   })
-  print("===2")
   all_clusters <- as.data.frame(all_clusters)
-  print("===3")
   colnames(all_clusters) <- as.character(2:length(mc))
-  print("===4")
   return(all_clusters)
 }
 
@@ -253,12 +238,12 @@ get_UMAP_dataframe <- function(fcs_raw, use_markers, clust_markers, tsne_inds, c
 #' @return
 #' @importFrom flowCore fsApply sampleNames "sampleNames<-"
 #'
-get_abundance_dataframe <- function(fcs_raw, cell_clustering){
-  sample_ids <- rep(flowCore::sampleNames(fcs_raw), flowCore::fsApply(fcs_raw, nrow))
-  abundance_data <- table(cell_clustering, sample_ids)
-  abundance_data <- t(t(abundance_data) / colSums(abundance_data)) * 100
+get_abundance_dataframe <- function(cell_ann, samples_col = "samples", clusters_col = "clusters"){
+  if(!(clusters_col %in% colnames(cell_ann))){return(NULL)}
+  if(!(samples_col %in% colnames(cell_ann))){return(NULL)}
+  abundance_data <- table(cell_ann[,c(clusters_col, samples_col)])
+  abundance_data <- t(abundance_data / rowSums(abundance_data)) * 100
   abundance_data <- as.data.frame(abundance_data)
-  colnames(abundance_data) <- c('cluster', 'sample_ids', 'abundance')
   return(abundance_data)
 }
 

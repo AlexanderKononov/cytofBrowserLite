@@ -96,6 +96,12 @@ cytofBrowserGUI <-function(){
                                            choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
                                                           'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
                                downloadButton('dwn_scatter_dp', ""),
+                               hr(),
+                               numericInput("dwn_scatter_dp_width", label = h5("width"), value = 10),
+                               numericInput("dwn_scatter_dp_height", label = h5("height"), value = 8),
+                               selectInput("dwn_scatter_dp_units", label = h5("units"),
+                                           choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                               numericInput("dwn_scatter_dp_dpi", label = h5("dpi"), value = 300),
                                icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
                              )
                       )
@@ -113,6 +119,12 @@ cytofBrowserGUI <-function(){
                                                     choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
                                                                    'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
                                         downloadButton('dwn_smpl_hist_dp', ""),
+                                        hr(),
+                                        numericInput("dwn_smpl_hist_dp_width", label = h5("width"), value = 10),
+                                        numericInput("dwn_smpl_hist_dp_height", label = h5("height"), value = 8),
+                                        selectInput("dwn_smpl_hist_dp_units", label = h5("units"),
+                                                    choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                                        numericInput("dwn_smpl_hist_dp_dpi", label = h5("dpi"), value = 300),
                                         icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
                                       )
                                )
@@ -136,6 +148,12 @@ cytofBrowserGUI <-function(){
                                                     choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
                                                                    'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
                                         downloadButton('dwn_mk_density_dp', ""),
+                                        hr(),
+                                        numericInput("dwn_mk_density_dp_width", label = h5("width"), value = 10),
+                                        numericInput("dwn_mk_density_dp_height", label = h5("height"), value = 8),
+                                        selectInput("dwn_mk_density_dp_units", label = h5("units"),
+                                                    choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                                        numericInput("dwn_mk_density_dp_dpi", label = h5("dpi"), value = 300),
                                         icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
                                       )
                                )
@@ -146,8 +164,6 @@ cytofBrowserGUI <-function(){
                              verbatimTextOutput('mk_rested_dp'),
                              h4("Unused markers"),
                              verbatimTextOutput('mk_excluded_dp')
-                    ),
-                    tabPanel("Abundance",
                     )
                   ),
                 )
@@ -247,6 +263,12 @@ cytofBrowserGUI <-function(){
                                            choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
                                                           'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
                                downloadButton('dwn_scatter_clust', ""),
+                               hr(),
+                               numericInput("dwn_scatter_clust_width", label = h5("width"), value = 10),
+                               numericInput("dwn_scatter_clust_height", label = h5("height"), value = 8),
+                               selectInput("dwn_scatter_clust_units", label = h5("units"),
+                                           choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                               numericInput("dwn_scatter_clust_dpi", label = h5("dpi"), value = 300),
                                icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
                              )
 
@@ -254,6 +276,38 @@ cytofBrowserGUI <-function(){
                     ),
                     plotOutput('scatter_plot_clust'),
                     uiOutput('mk_scatter_clust_ui')
+                  )
+                ),
+                fluidRow(
+                  tabBox(
+                    tabPanel("Markers",
+                             h4("Used for clustering markers"),
+                             verbatimTextOutput('mk_clusted_clust'),
+                             h4("Used markers"),
+                             verbatimTextOutput('mk_rested_clust'),
+                             h4("Unused markers"),
+                             verbatimTextOutput('mk_excluded_clust')
+                    ),
+                    tabPanel("Abundance",
+                             fluidRow(
+                               column(10, plotOutput('abundance_clust')),
+                               column(2,
+                                      dropdownButton(
+                                        selectInput('dwn_abundance_clust_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                                   'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                                        downloadButton('dwn_abundance_clust', ""),
+                                        hr(),
+                                        numericInput("dwn_abundance_clust_width", label = h5("width"), value = 10),
+                                        numericInput("dwn_abundance_clust_height", label = h5("height"), value = 8),
+                                        selectInput("dwn_abundance_clust_units", label = h5("units"),
+                                                    choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                                        numericInput("dwn_abundance_clust_dpi", label = h5("dpi"), value = 300),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
+                             )
+                    )
                   )
                 )
         ),

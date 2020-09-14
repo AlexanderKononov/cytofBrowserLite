@@ -232,7 +232,9 @@ cytofBrowser_server <- function(input, output){
     content = function(file) {
       ext <- input$dwn_scatter_dp_ext
       if(is.null(ext)){ext <- "pdf"}
-      ggplot2::ggsave(file, plot = plots$scatter_dp, device = ext)
+      ggplot2::ggsave(file, plot = plots$scatter_dp, device = ext, width = input$dwn_scatter_dp_width,
+                      height = input$dwn_scatter_dp_height, units = input$dwn_scatter_dp_units,
+                      dpi =input$dwn_scatter_dp_dpi)
     }
   )
 
@@ -257,7 +259,9 @@ cytofBrowser_server <- function(input, output){
     content = function(file) {
       ext <- input$dwn_smpl_hist_dp_ext
       if(is.null(ext)){ext <- "pdf"}
-      ggsave(file, plot = plots$smpl_hist, device = ext)
+      ggsave(file, plot = plots$smpl_hist, device = ext, width = input$dwn_smpl_hist_dp_width,
+             height = input$dwn_smpl_hist_dp_height, units = input$dwn_smpl_hist_dp_units,
+             dpi =input$dwn_smpl_hist_dp_dpi)
     }
   )
 
@@ -295,7 +299,9 @@ cytofBrowser_server <- function(input, output){
     content = function(file) {
       ext <- input$dwn_mk_density_dp_ext
       if(is.null(ext)){ext <- "pdf"}
-      ggsave(file, plot = plots$mk_density, device = ext)
+      ggsave(file, plot = plots$mk_density, device = ext, width = input$dwn_mk_density_dp_width,
+             height = input$dwn_mk_density_dp_height, units = input$dwn_mk_density_dp_units,
+             dpi =input$dwn_mk_density_dp_dpi)
     }
   )
 
@@ -580,7 +586,45 @@ cytofBrowser_server <- function(input, output){
     content = function(file) {
       ext <- input$dwn_scatter_clust_ext
       if(is.null(ext)){ext <- "pdf"}
-      ggplot2::ggsave(file, plot = plots$scatter_clust, device = ext)
+      ggplot2::ggsave(file, plot = plots$scatter_clust, device = ext,
+                      width = input$dwn_scatter_clust_width,height = input$dwn_scatter_clust_height,
+                      units = input$dwn_scatter_clust_units,dpi =input$dwn_scatter_clust_dpi)
+    }
+  )
+
+  ##### Reactive show current use_markers from "fcs_data" object
+  output$mk_clusted_clust <- renderPrint({clusters$clust_markers})
+  output$mk_rested_clust <- renderPrint({fcs_data$use_markers})
+  output$mk_excluded_clust <- renderPrint({
+    fcs_data$entire_panel[!(fcs_data$entire_panel %in% fcs_data$use_markers)]
+  })
+
+  ##### Drawing the reactive abundance plot
+  output$abundance_clust <- renderPlot({
+    if(is.null(clusters$nodes$color)){return(NULL)}
+    abundance_df <- get_abundance_dataframe(cell_ann = fcs_data$cell_ann,
+                                            samples_col = "samples", clusters_col = "clusters")
+    plots$abundance_clust <- ggplot(abundance_df, aes(x = samples, y = Freq, fill = clusters)) +
+      geom_bar(stat = 'identity') +
+      scale_fill_manual(values = as.character(clusters$nodes$color))+
+      ylab("cell abundance")+
+      theme_bw()+
+      theme(axis.text.x = element_text(angle = 90))
+    return(plots$abundance_clust)
+  })
+
+  ##### Download abundance plot for clustering
+  output$dwn_abundance_clust <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_abundance_clust_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Abundance_plot_clustering", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_abundance_clust_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggsave(file, plot = plots$abundance_clust, device = ext,
+             width = input$dwn_abundance_clust_width,height = input$dwn_abundance_clust_height,
+             units = input$dwn_abundance_clust_units,dpi =input$dwn_abundance_clust_dpi)
     }
   )
 
