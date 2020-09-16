@@ -138,3 +138,18 @@ get_cell_annotation_fcs_files <- function(fcs_raw, cell_annotation, column_names
   return(clustered_fcs)
 }
 
+#' Create tidy data frame to order overlaped gates to plotting
+#'
+#' @param gates dataframe with gates data
+#'
+#' @return
+#' @importFrom reshape2 melt
+get_gates_overlap_vector <- function(gates){
+  plot_gates <- gates
+  order_tags <- apply(plot_gates, 1,function(x){paste(x,collapse = "_")})
+  plot_gates <- plot_gates[order(order_tags),]
+  plot_gates$order_tags <- 1:nrow(plot_gates)
+  plot_gates <- reshape2::melt(plot_gates, id = "order_tags")
+  colnames(plot_gates) <- c("Cells", "Gates", "value")
+  return(plot_gates)
+}

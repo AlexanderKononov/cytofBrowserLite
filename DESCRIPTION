@@ -29,4 +29,5 @@ Imports:
     ConsensusClusterPlus,
     FlowSOM,
     utils,
-    RColorBrewer
+    RColorBrewer,
+    reshape2

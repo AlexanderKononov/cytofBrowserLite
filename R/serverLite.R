@@ -277,7 +277,7 @@ cytofBrowser_server <- function(input, output){
     if(is.null(fcs_data$use_markers)){return(NULL)}
     color_mk <- names(fcs_data$use_markers)[1]
     if(!is.null(input$mk_density_dp)){color_mk <- input$mk_density_dp}
-    plot_data <- data.frame(expr_data = exprs_data[,use_markers[color_mk]])
+    plot_data <- data.frame(expr_data = fcs_data$exprs_data[,fcs_data$use_markers[color_mk]])
     plot_data[,"expr_data"] <- as.numeric(plot_data[,"expr_data"])
     if(input$mk_zero_del_density_plot_dp){
       plot_data <- data.frame(expr_data = plot_data$expr_data[plot_data$expr_data != 0])
@@ -407,6 +407,37 @@ cytofBrowser_server <- function(input, output){
       theme(legend.position = "none")
     return(plots$scatter_plot_gating)
   })
+
+  ##### Drawing the gates overlap plot
+  output$gates_overlap <- renderPlot({
+    if(is.null(gates$gates)){return(NULL)}
+    if(ncol(gates$gates) <= 1){return(NULL)}
+    plot_gates <- get_gates_overlap_vector(gates = gates$gates)
+    plots$gate_overlap <- ggplot(plot_gates, aes(Gates, Cells, fill= value))+
+      geom_tile()+
+      scale_fill_manual(values = c("white", "black"))+
+      theme_bw()+
+      theme(legend.position = "none")+
+      theme(axis.text.x = element_text(angle = 90))
+    return(plots$gate_overlap)
+  })
+
+  ##### Download gates overlap plot
+  output$dwn_overlap_gate <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_overlap_gate_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Gates_overlap_plot", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_overlap_gate_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggsave(file, plot = plots$gate_overlap, device = ext,
+             width = input$dwn_overlap_gate_width,height = input$dwn_overlap_gate_height,
+             units = input$dwn_overlap_gate_units,dpi =input$dwn_overlap_gate_dpi)
+    }
+  )
+
+
 
   ### The object for the anthology graph of gates
   output$gate_antology_graph <- visNetwork::renderVisNetwork({

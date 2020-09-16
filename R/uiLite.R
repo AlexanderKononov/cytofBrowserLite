@@ -181,11 +181,6 @@ cytofBrowserGUI <-function(){
                              uiOutput("mergeing_gates_ui"),
                              hr(),
                              uiOutput("rename_gates_ui")
-                    ),
-                    tabPanel("Cells management",
-
-                    ),
-                    tabPanel("Save",
                     )
                   ),
                   shinydashboard::box(
@@ -198,7 +193,28 @@ cytofBrowserGUI <-function(){
                   )
                 ),
                 fluidRow(
-                  shinydashboard::box(
+                  tabBox(
+                    tabPanel("Gates overlap",
+                             fluidRow(
+                               column(10, plotOutput('gates_overlap')),
+                               column(2,
+                                      dropdownButton(
+                                        selectInput('dwn_overlap_gate_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                                   'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                                        downloadButton('dwn_overlap_gate', ""),
+                                        hr(),
+                                        numericInput("dwn_overlap_gate_width", label = h5("width"), value = 10),
+                                        numericInput("dwn_overlap_gate_height", label = h5("height"), value = 8),
+                                        selectInput("dwn_overlap_gate_units", label = h5("units"),
+                                                    choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                                        numericInput("dwn_overlap_gate_dpi", label = h5("dpi"), value = 300),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
+                             )
+                    ),
+                    tabPanel("Annotations")
 
                   ),
                   shinydashboard::box(
