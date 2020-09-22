@@ -57,10 +57,14 @@ get_test_fcs_metadata <- function(test_data_dproc){
 #' }
 #'
 #' @return flowSet object from flowCore packag
-#' @importFrom flowCore read.flowSet sampleNames "sampleNames<-"
+#' @importFrom flowCore read.FCS read.flowSet sampleNames "sampleNames<-"
 #'
 get_fcs_raw <- function(md){
   pathes <- as.vector(md$path)
+  fcs_list <- lapply(pathes, flowCore::read.FCS)
+  fcs_colnames <- lapply(fcs_list, colnames)
+  colnames_test <- lapply(fcs_colnames, function(x){all(unique(unlist(fcs_colnames)) %in% x)})
+  if(any(!colnames_test)){return(NULL)}
   fcs_raw <- flowCore::read.flowSet(pathes, transformation = FALSE, truncate_max_range = FALSE)
   sampleNames(fcs_raw) <- unlist(gsub(".fcs", "", flowCore::sampleNames(fcs_raw)))
   return(fcs_raw)

@@ -29,15 +29,20 @@ cytofBrowserGUI <-function(){
                 shiny::fluidRow(
                   shinydashboard::tabBox(
                     shiny::tabPanel("Uploading",
-                                    shinyFiles::shinyFilesButton('choose_fcs_dp', label= 'Select FCS files', title='Please select FCS files', multiple=TRUE),
+                                    uiOutput('selected_fcs_dp_ui'),
+                                    fluidRow(
+                                      column(1),
+                                      column(5,shinyFiles::shinyFilesButton('choose_fcs_dp', label= 'Select FCS files',
+                                                                            title='Please select FCS files', multiple=TRUE)),
+                                      column(5, actionButton('butt_upload_dproc', label = "Upload files"))
+                                    ),
                                     hr(),
                                     conditionalPanel(
                                       condition = "input.extr_clust_dproc == true",
                                       textInput("extr_clust_pattern_dproc",
                                                 label = h5("full or part column name with clusters info (for cytofBrowser and cytofkit : <cluster>)"),
                                                 value = "cluster")),
-                                    hr(),
-                                    actionButton('butt_upload_dproc', label = "Upload")
+
                     ),
                     shiny::tabPanel("Transforming",
                                     checkboxGroupInput("transformation_list", label = h4("Transformations"),

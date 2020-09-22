@@ -30,15 +30,32 @@ cytofBrowser_server <- function(input, output){
   cluster_settings <- reactiveValues(perplexity = 30, theta = 0.5, max_iter = 1000, size_fuse = 5000)
   plots <- reactiveValues()
 
+  ##### Showing selected fcs files
+  output$selected_fcs_dp_ui <- renderUI({
+    if((length(input$choose_fcs_dp) <= 1)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             h5("Selected files"),
+             verbatimTextOutput('selected_fcs_dp')
+             )
+      )
+  })
+  output$selected_fcs_dp <- renderPrint({as.character(parseFilePaths(roots, input$choose_fcs_dp)$datapath)})
 
   ##### Upload data and automatic pre-processing steps
   observeEvent(input$butt_upload_dproc, {
-    if((length(input$choose_fcs_dp) <= 1)){return(NULL)}
+    if((length(input$choose_fcs_dp) <= 1)){
+      showNotification("Files were not chosen", type = "warning")
+      return(NULL)}
     withProgress(message = "Extraction data", min =0, max = 11, value = 0,{
       ## Get row data fcs files
       fcs_data$md <- get_fcs_metadata(parseFilePaths(roots, input$choose_fcs_dp)$datapath)
       incProgress(1, detail = "Upload data" )
       fcs_data$fcs_raw <- get_fcs_raw(fcs_data$md)
+      if(is.null(fcs_data$fcs_raw)){
+        showNotification("Files have different channels", type = "error")
+        return(NULL)}
       incProgress(1, detail = "Extraction ereachment" )
       fcs_data$exprs_data <- get_exprs_data(fcs_data$fcs_raw)
       incProgress(1, detail = "Extraction panel")
