@@ -42,7 +42,7 @@ Presently you can instal the develop version of this programme:
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
     
-devtools::install_github("AlexanderKononov/cytofBrowser")
+devtools::install_github("AlexanderKononov/cytofBrowserLite")
 ```
 
 ## Run the cytofBrowser
@@ -53,7 +53,7 @@ I assumed that this programme will be used with GUI as Shiny App.
 cytofBrowser::cytofBrowserGUI()
 ```
 
-## trubelshutingTroubleshooting
+## Troubleshooting
 
 If you can’t install the app correctly: Check the dependencies of
 packages. List of demanded packages is waited in file DESCRIPTION. Also
