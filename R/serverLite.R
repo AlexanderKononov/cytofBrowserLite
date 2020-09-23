@@ -429,7 +429,7 @@ cytofBrowser_server <- function(input, output){
   output$gates_overlap <- renderPlot({
     if(is.null(gates$gates)){return(NULL)}
     if(ncol(gates$gates) <= 1){return(NULL)}
-    plot_gates <- get_gates_overlap_vector(gates = gates$gates)
+    plot_gates <- get_gates_overlap_data(gates = gates$gates)
     plots$gate_overlap <- ggplot(plot_gates, aes(Gates, Cells, fill= value))+
       geom_tile()+
       scale_fill_manual(values = c("white", "black"))+
@@ -454,7 +454,36 @@ cytofBrowser_server <- function(input, output){
     }
   )
 
+  ##### Drawing the annotation overlap plot in gate section
+  output$ann_overlap_gate <- renderPlot({
+    if(is.null(fcs_data$cell_ann)){return(NULL)}
+    if(ncol(fcs_data$cell_ann) <= 1){return(NULL)}
+    plot_ann <- get_ann_overlap_data(ann = fcs_data$cell_ann)
+    pl <- ggplot(plot_ann, aes(fill=group, y=value, x = annotations)) +
+      geom_bar(position="fill", stat="identity")+
+      scale_fill_manual(values=plot_ann$color)+
+      theme_bw() +
+      ylab("")+
+      theme(axis.text.x = element_text(angle = 90))
+    if(input$legend_ann_overlap_plot_gate){pl <- pl + theme(legend.position="none")}
+    plots$ann_overlap_gate <- pl
+    return(plots$ann_overlap_gate)
+  })
 
+  ##### Download annotation overlap plot in gate section
+  output$dwn_ann_overlap_gate <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_ann_overlap_gate_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Gates_overlap_plot", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_ann_overlap_gate_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggsave(file, plot = plots$ann_overlap_gate, device = ext,
+             width = input$dwn_ann_overlap_gate_width,height = input$dwn_ann_overlap_gate_height,
+             units = input$dwn_ann_overlap_gate_units,dpi =input$dwn_ann_overlap_gate_dpi)
+    }
+  )
 
   ### The object for the anthology graph of gates
   output$gate_antology_graph <- visNetwork::renderVisNetwork({
@@ -673,6 +702,37 @@ cytofBrowser_server <- function(input, output){
       ggsave(file, plot = plots$abundance_clust, device = ext,
              width = input$dwn_abundance_clust_width,height = input$dwn_abundance_clust_height,
              units = input$dwn_abundance_clust_units,dpi =input$dwn_abundance_clust_dpi)
+    }
+  )
+
+  ##### Drawing the clusters overlap plot in cluster section
+  output$clusters_overlap_clust <- renderPlot({
+    if(is.null(clusters$clusters)){return(NULL)}
+    if(ncol(clusters$clusters) <= 1){return(NULL)}
+    plot_ann <- get_ann_overlap_data(ann = clusters$clusters)
+    plots$clusters_overlap_clust <- ggplot(plot_ann, aes(fill=group, y=value, x = annotations)) +
+      geom_bar(position="fill", stat="identity")+
+      scale_fill_manual(values=plot_ann$color)+
+      theme_bw() +
+      ylab("")+
+      xlab("clustering")+
+      theme(axis.text.x = element_text(angle = 90))+
+      theme(legend.position="none")
+    return(plots$clusters_overlap_clust)
+  })
+
+  ##### Download clusters overlap plot in cluster section
+  output$dwn_clusters_overlap_clust <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_clusters_overlap_clust_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Gates_overlap_plot", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_clusters_overlap_clust_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggsave(file, plot = plots$clusters_overlap_clust, device = ext,
+             width = input$dwn_clusters_overlap_clust_width,height = input$dwn_clusters_overlap_clust_height,
+             units = input$dwn_clusters_overlap_clust_units,dpi =input$dwn_clusters_overlap_clust_dpi)
     }
   )
 

@@ -24,7 +24,9 @@ cytofBrowserGUI <-function(){
     ),
     shinydashboard::dashboardBody(
       shinydashboard::tabItems(
-        # First tab content
+        ##################################
+        ##### First tab content      #####
+        ##################################
         shinydashboard::tabItem(tabName = 'data_processing',
                 shiny::fluidRow(
                   shinydashboard::tabBox(
@@ -174,7 +176,9 @@ cytofBrowserGUI <-function(){
                 )
         ),
 
-        # Second tab content
+        ###############################
+        ##### Second tab content  #####
+        ###############################
         shinydashboard::tabItem(tabName = 'gating',
                 fluidRow(
                   tabBox(
@@ -219,7 +223,31 @@ cytofBrowserGUI <-function(){
                                )
                              )
                     ),
-                    tabPanel("Annotations")
+                    tabPanel("Annotations",
+                             fluidRow(
+                               column(10, plotOutput('ann_overlap_gate')),
+                               column(2,
+                                      dropdownButton(
+                                        tags$h4("Advanced options"),
+                                        checkboxInput("legend_ann_overlap_plot_gate", label = "Remove legend", value = TRUE),
+                                        icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                                      ),
+                                      dropdownButton(
+                                        selectInput('dwn_ann_overlap_gate_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                                   'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                                        downloadButton('dwn_ann_overlap_gate', ""),
+                                        hr(),
+                                        numericInput("dwn_ann_overlap_gate_width", label = h5("width"), value = 10),
+                                        numericInput("dwn_ann_overlap_gate_height", label = h5("height"), value = 8),
+                                        selectInput("dwn_ann_overlap_gate_units", label = h5("units"),
+                                                    choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                                        numericInput("dwn_ann_overlap_gate_dpi", label = h5("dpi"), value = 300),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
+                             )
+                             )
 
                   ),
                   shinydashboard::box(
@@ -228,7 +256,9 @@ cytofBrowserGUI <-function(){
                 )
         ),
 
-        # Third tab content
+        #############################
+        ##### Third tab content #####
+        #############################
         shinydashboard::tabItem(tabName = 'data_clustering',
                 fluidRow(
                   tabBox(
@@ -328,12 +358,44 @@ cytofBrowserGUI <-function(){
                                       )
                                )
                              )
-                    )
+                    ),
+                    tabPanel("Clusiering",
+                             fluidRow(
+                               column(10, plotOutput('clusters_overlap_clust')),
+
+
+
+                               column(2,
+                                      dropdownButton(
+                                        tags$h4("Advanced options"),
+                                        checkboxInput("legend_clusters_overlap_plot_clust", label = "Remove legend", value = TRUE),
+                                        icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                                      ),
+                                      dropdownButton(
+                                        selectInput('dwn_clusters_overlap_clust_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                                   'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                                        downloadButton('dwn_clusters_overlap_clust', ""),
+                                        hr(),
+                                        numericInput("dwn_clusters_overlap_clust_width", label = h5("width"), value = 10),
+                                        numericInput("dwn_clusters_overlap_clust_height", label = h5("height"), value = 8),
+                                        selectInput("dwn_clusters_overlap_clust_units", label = h5("units"),
+                                                    choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                                        numericInput("dwn_clusters_overlap_clust_dpi", label = h5("dpi"), value = 300),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
+                             )
+                             )
+
+
                   )
                 )
         ),
 
-        # Fourth tab content
+        #############################
+        #### Fourth tab content #####
+        #############################
         tabItem(tabName = 'data_exploration',
                 fluidRow(
                   shinydashboard::box(
@@ -373,7 +435,9 @@ cytofBrowserGUI <-function(){
                 )
         ),
 
-        # Sixth tab content
+        #############################
+        ##### Sixth tab content #####
+        #############################
         tabItem(tabName = 'data_crosspanel',
                 fluidRow(
                   tabBox(

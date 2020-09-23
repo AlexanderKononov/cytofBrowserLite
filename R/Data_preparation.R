@@ -63,10 +63,12 @@ get_fcs_raw <- function(md){
   pathes <- as.vector(md$path)
   fcs_list <- lapply(pathes, flowCore::read.FCS)
   fcs_colnames <- lapply(fcs_list, colnames)
-  colnames_test <- lapply(fcs_colnames, function(x){all(unique(unlist(fcs_colnames)) %in% x)})
+  colnames_test <- unlist(lapply(fcs_colnames, function(x){all(unique(unlist(fcs_colnames)) %in% x)}))
   if(any(!colnames_test)){return(NULL)}
-  fcs_raw <- flowCore::read.flowSet(pathes, transformation = FALSE, truncate_max_range = FALSE)
-  sampleNames(fcs_raw) <- unlist(gsub(".fcs", "", flowCore::sampleNames(fcs_raw)))
+  fcs_raw <- as(fcs_list, "flowSet")
+  #fcs_raw <- flowCore::read.flowSet(pathes, transformation = FALSE, truncate_max_range = FALSE)
+  #sampleNames(fcs_raw) <- unlist(gsub(".fcs", "", flowCore::sampleNames(fcs_raw)))
+  sampleNames(fcs_raw) <- basename(pathes)
   return(fcs_raw)
 }
 

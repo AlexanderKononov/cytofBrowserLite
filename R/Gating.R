@@ -144,7 +144,7 @@ get_cell_annotation_fcs_files <- function(fcs_raw, cell_annotation, column_names
 #'
 #' @return
 #' @importFrom reshape2 melt
-get_gates_overlap_vector <- function(gates){
+get_gates_overlap_data <- function(gates){
   plot_gates <- gates
   order_tags <- apply(plot_gates, 1,function(x){paste(x,collapse = "_")})
   plot_gates <- plot_gates[order(order_tags),]
@@ -152,4 +152,30 @@ get_gates_overlap_vector <- function(gates){
   plot_gates <- reshape2::melt(plot_gates, id = "order_tags")
   colnames(plot_gates) <- c("Cells", "Gates", "value")
   return(plot_gates)
+}
+
+#' Create tidy data frame to plot portions of groups from annotations
+#'
+#' @param ann
+#' @param col_names
+#'
+#' @return
+#' @importFrom RColorBrewer brewer.pal
+#'
+get_ann_overlap_data <- function(ann,col_names = NULL){
+  if(is.null(col_names)){
+    exeptions <- c("all_cells", "tSNE1", "tSNE2", "UMAP1", "UMAP2")
+    col_names <- colnames(ann)
+    col_names <- col_names[!(col_names %in% exeptions)]
+  }
+  plot_ann <- do.call(rbind, lapply(col_names, function(x){
+    count_data <- table(ann[,x])
+    data.frame(annotations = x, group = names(count_data), value = as.numeric(count_data) )
+  }))
+  pal_order <- c("Dark2", "Set1", "Set2", "Paired", "Accent", "Set3", "Pastel1", "Pastel2")
+  qual_col_pals <- RColorBrewer::brewer.pal.info[RColorBrewer::brewer.pal.info$category == 'qual',]
+  ann_colour <- as.character(unlist(mapply(RColorBrewer::brewer.pal, qual_col_pals[pal_order, 'maxcolors'],
+                                               pal_order))[1:nrow(plot_ann)])
+  plot_ann$color <- ann_colour
+  return(plot_ann)
 }
