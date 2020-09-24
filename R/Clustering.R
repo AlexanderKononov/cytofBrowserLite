@@ -239,8 +239,8 @@ get_UMAP_dataframe <- function(fcs_raw, use_markers, clust_markers, tsne_inds, c
 get_abundance_dataframe <- function(cell_ann, samples_col = "samples", clusters_col = "clusters"){
   if(!(clusters_col %in% colnames(cell_ann))){return(NULL)}
   if(!(samples_col %in% colnames(cell_ann))){return(NULL)}
-  abundance_data <- table(cell_ann[,c(clusters_col, samples_col)])
-  abundance_data <- t(abundance_data / rowSums(abundance_data)) * 100
+  abundance_data <- t(table(cell_ann[,c(clusters_col, samples_col)]))
+  abundance_data <- (abundance_data / rowSums(abundance_data)) * 100
   abundance_data <- as.data.frame(abundance_data)
   return(abundance_data)
 }
