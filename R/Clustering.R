@@ -112,14 +112,12 @@ get_euclid_dist <- function(exprs_data, use_markers, cell_clustering){
 #'
 #' @return
 get_edges <- function(cluster_euclidean_distance){
-  width <- log2(as.numeric(cluster_euclidean_distance$euclidean_distance))/5
+  width <- as.numeric(cluster_euclidean_distance$euclidean_distance)
   width <- 1+((width - min(width))/(max(width) - min(width))*10)
   edges <- data.frame(from = cluster_euclidean_distance$Cluster_1,
                       to = cluster_euclidean_distance$Cluster_2,
                       width  = width,
                       smooth = T)
-  edges <- cluster_euclidean_distance[,1:3]
-  colnames(edges) <- c('from', 'to', 'width')
   edges$id <- rownames(edges)
   edges$from <- as.character(edges$from)
   edges$to <- as.character(edges$to)

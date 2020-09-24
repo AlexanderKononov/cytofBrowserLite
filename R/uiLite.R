@@ -362,15 +362,7 @@ cytofBrowserGUI <-function(){
                     tabPanel("Clusiering",
                              fluidRow(
                                column(10, plotOutput('clusters_overlap_clust')),
-
-
-
                                column(2,
-                                      dropdownButton(
-                                        tags$h4("Advanced options"),
-                                        checkboxInput("legend_clusters_overlap_plot_clust", label = "Remove legend", value = TRUE),
-                                        icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
-                                      ),
                                       dropdownButton(
                                         selectInput('dwn_clusters_overlap_clust_ext', label = NULL,
                                                     choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
@@ -387,8 +379,13 @@ cytofBrowserGUI <-function(){
                                )
                              )
                              )
-
-
+                  ),
+                  box(
+                    visNetworkOutput("clusters_graph"),
+                    sliderInput('edges_threshold_clusterisation', "Edge weight threshold for graph",
+                                min =0, max = 1, value = 0.5, step = 0.01),
+                    sliderInput('gravity_clusterisation', "Gravity for graph",
+                                min = -100, max = 0, value = -40, step = 1)
                   )
                 )
         ),

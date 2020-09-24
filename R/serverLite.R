@@ -736,6 +736,22 @@ cytofBrowser_server <- function(input, output){
     }
   )
 
+  ##### Drawing the reactive and interactive graph with clusters
+  output$clusters_graph <- renderVisNetwork({
+    if(is.null(clusters$nodes)){return(NULL)}
+    edges_threshold <- input$edges_threshold_clusterisation
+    if(is.null(input$edges_threshold_clusterisation)){edges_threshold <- 0.5}
+    gravity <- input$gravity_clusterisation
+    if(is.null(input$gravity_clusterisation)){gravity <- -40}
+    edges <- filter_edges(clusters$edges, edges_threshold)
+
+    net <- visNetwork::visNetwork(clusters$nodes, edges)
+    net <- visNetwork::visInteraction(net, hover = TRUE)
+    net <- visNetwork::visEvents(net, select = "function(nodes) { Shiny.onInputChange('current_node_id', nodes.nodes);}")
+    net <- visNetwork::visPhysics(net, solver = "forceAtlas2Based", forceAtlas2Based = list(gravitationalConstant = gravity))
+    return(net)
+  })
+
 }
 
 
