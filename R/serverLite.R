@@ -9,7 +9,7 @@
 #'
 #' @return
 #'
-#' @import shiny shinyFiles ggplot2
+#' @import shiny shinyFiles ggplot2 visNetwork
 #' @importFrom flowCore sampleNames write.flowSet
 #' @importFrom grDevices colorRampPalette
 #'
@@ -751,6 +751,19 @@ cytofBrowser_server <- function(input, output){
     net <- visNetwork::visPhysics(net, solver = "forceAtlas2Based", forceAtlas2Based = list(gravitationalConstant = gravity))
     return(net)
   })
+
+  ########################
+  ###   Enrichements   ###
+  ########################
+
+  #output$hm_rows_enrich_ui <- renderUI({
+  #  if(is.null(fcs_data$cell_ann)){return(NULL)}
+  #  col_names <- colnames(fcs_data$cell_ann)
+  #  col_names <- col_names[!(col_names %in% c("all_cells", "tSNE1", "tSNE2", "UMAP1", "UMAP2"))]
+  #  if(length(fcs_data$cell_ann)){return(NULL)}
+  #  selectInput('mk_density_dp', label = h5("Plotted marker"),
+  #              choices = names(fcs_data$use_markers), selected = 1)
+  #})
 
 }
 

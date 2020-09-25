@@ -7,6 +7,7 @@
 #'
 #' @return The function runs the Shiny App in browser.
 #' @import shiny shinyFiles shinydashboard shinyWidgets
+#' @importFrom visNetwork visNetworkOutput
 #' @export
 #'
 cytofBrowserGUI <-function(){
@@ -17,7 +18,7 @@ cytofBrowserGUI <-function(){
         shinydashboard::menuItem("Data", tabName = 'data_processing', icon = icon("bars")),
         shinydashboard::menuItem("Gating", tabName = 'gating', icon = icon("object-group")),
         shinydashboard::menuItem("Clustering", tabName = 'data_clustering', icon = icon("spinner")),
-        shinydashboard::menuItem("Exploration", tabName = 'data_exploration', icon = icon("chart-area")),
+        shinydashboard::menuItem("Enrichments", tabName = 'data_enrichments', icon = icon("chart-area")),
         shinydashboard::menuItem("Correlation", tabName = 'data_correlation', icon = icon("braille")),
         shinydashboard::menuItem("Cross-panel", tabName = 'data_crosspanel', icon = icon("clone"))
       )
@@ -277,13 +278,6 @@ cytofBrowserGUI <-function(){
                              ),
                              uiOutput("mk_subset_clusters_ui"),
                              actionButton('start_clustering', label = "Clustering")
-                    ),
-                    tabPanel("cluster management",
-                    ),
-                    tabPanel("Cells management",
-
-                    ),
-                    tabPanel("Save",
                     )
                   ),
                   shinydashboard::box(
@@ -381,7 +375,7 @@ cytofBrowserGUI <-function(){
                              )
                   ),
                   box(
-                    visNetworkOutput("clusters_graph"),
+                    visNetwork::visNetworkOutput("clusters_graph"),
                     sliderInput('edges_threshold_clusterisation', "Edge weight threshold for graph",
                                 min =0, max = 1, value = 0.5, step = 0.01),
                     sliderInput('gravity_clusterisation', "Gravity for graph",
@@ -393,10 +387,35 @@ cytofBrowserGUI <-function(){
         #############################
         #### Fourth tab content #####
         #############################
-        tabItem(tabName = 'data_exploration',
+        tabItem(tabName = 'data_enrichments',
                 fluidRow(
                   shinydashboard::box(
-
+                    fluidRow(
+                      box(
+                        fluidRow(
+                          column(1, actionBttn(inputId = "redraw_expression", style = "material-circle", color = "default" ,icon = icon("redo"))),
+                          column(1,
+                                 dropdownButton(
+                                   #tags$h5("Heatmap rows"),
+                                   #uiOutput('hm_rows_enrich_ui'),
+                                   #tags$h5("Options of plotting"),
+                                   selectInput("method_summarize_expression", label = h5("Summarise method"),
+                                               choices = list('median' = "median", 'mean' = "mean"),
+                                               selected = 'median'),
+                                   icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                                 )
+                          ),
+                          column(1,
+                                 dropdownButton(
+                                   selectInput('dwn_drawn_cluster_hm_expr_ext', label = NULL,
+                                               choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png")),
+                                   downloadButton('dwn_drawn_cluster_hm_expr', ""),
+                                   icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                 )
+                          )
+                        )
+                      )
+                    ),
                     width = 12
                   ),
                   shinydashboard::box(
