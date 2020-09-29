@@ -391,35 +391,93 @@ cytofBrowserGUI <-function(){
                 fluidRow(
                   shinydashboard::box(
                     fluidRow(
-                      box(
-                        fluidRow(
-                          column(1, actionBttn(inputId = "redraw_expression", style = "material-circle", color = "default" ,icon = icon("redo"))),
-                          column(1,
-                                 dropdownButton(
-                                   #tags$h5("Heatmap rows"),
-                                   #uiOutput('hm_rows_enrich_ui'),
-                                   #tags$h5("Options of plotting"),
-                                   selectInput("method_summarize_expression", label = h5("Summarise method"),
-                                               choices = list('median' = "median", 'mean' = "mean"),
-                                               selected = 'median'),
-                                   icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
-                                 )
-                          ),
-                          column(1,
-                                 dropdownButton(
-                                   selectInput('dwn_drawn_cluster_hm_expr_ext', label = NULL,
-                                               choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png")),
-                                   downloadButton('dwn_drawn_cluster_hm_expr', ""),
-                                   icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
-                                 )
-                          )
+                      fluidRow(
+                        column(1),
+                        column(1, actionBttn(inputId = 'redraw_expression', style = "material-circle", color = "default" ,icon = icon("redo"))),
+                        column(3, uiOutput('hm_rows_enrich_ui')),
+                        column(1,
+                               dropdownButton(
+                                 selectInput('method_summarize_enrich', label = h5("Summarise method"),
+                                             choices = list('median' = "median", 'mean' = "mean"),
+                                             selected = 'median'),
+                                 selectInput('row_scaling_enrich', label = h5("Rows scaling method"),
+                                             choices = list("Z-score Standardization" = 'zscore',
+                                                            "Min-max Normalization" = 'norm', "No scaling" = 'none'),
+                                             selected = 'zscore'),
+                                 icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                               )
+                        ),
+                        column(1,
+                               dropdownButton(
+                                 checkboxInput("hm_enrich_row_dend", label = "Rows clustering", value = TRUE),
+                                 checkboxInput("hm_enrich_col_dend", label = "Columns clustering", value = TRUE),
+                                 selectInput("hm_enrich_palette", label = h5("Palette"),
+                                             choices = list('PiYG'="PiYG", 'PRGn'="PRGn", 'PuOr'="PuOr", 'RdBu'="RdBu", 'RdGy'="RdGy",
+                                                            'RdYlBu'="RdYlBu", 'RdYlGn'="RdYlGn", 'Spectral'="Spectral",
+                                                            'Blues'="Blues", 'BuGn'="BuGn", 'BuPu'="BuPu", 'GnBu'="GnBu", 'Greens'="Greens",
+                                                            'Greys'="Greys", 'Oranges'="Oranges",'OrRd'="OrRd", 'PuBu'="PuBu",
+                                                            'PuBuGn'="PuBuGn", 'PuRd'="PuRd", 'Purples'="Purples", 'RdPu'="RdPu",
+                                                            'Reds'="Reds", 'YlGn'="YlGn", 'YlGnBu'="YlGnBu", 'YlOrBr'="YlOrBr", 'YlOrRd'="YlOrRd"),
+                                             selected = "RdYlBu"),
+                                 checkboxInput("hm_enrich_rev_pal", label = "Reverse palette", value = TRUE),
+                                 checkboxInput("hm_enrich_show_leg", label = "Show legend", value = TRUE),
+
+                                 icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                               )
+                               ),
+                        column(1,
+                               dropdownButton(
+                                 selectInput('dwn_hm_enrich_ext', label = NULL,
+                                             choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                            'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                                 downloadButton('dwn_hm_enrich', ""),
+                                 hr(),
+                                 numericInput("dwn_hm_enrich_width", label = h5("width"), value = 10),
+                                 numericInput("dwn_hm_enrich_height", label = h5("height"), value = 8),
+                                 selectInput("dwn_hm_enrich_units", label = h5("units"),
+                                             choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                                 numericInput("dwn_hm_enrich_dpi", label = h5("dpi"), value = 300),
+                                 icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                               )
                         )
                       )
                     ),
+                    fluidRow(column(1),
+                             column(11, plotOutput('hm_enrich'))
+                             ),
                     width = 12
                   ),
                   shinydashboard::box(
-
+                    fluidRow(
+                      column(1),
+                      column(4, uiOutput('mk_deconvol_enrich_ui')),
+                      column(4, uiOutput('gp_deconvol_enrich_ui')),
+                      column(1,
+                             dropdownButton(
+                               selectInput('method_sum_deconvol_enrich', label = h5("Summarise method"),
+                                           choices = list('median' = "median", 'mean' = "mean"),
+                                           selected = 'median'),
+                               icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                             )
+                             ),
+                      column(1,
+                             dropdownButton(
+                               selectInput('dwn_deconvol_enrich_ext', label = NULL,
+                                           choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                          'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                               downloadButton('dwn_deconvol_enrich', ""),
+                               hr(),
+                               numericInput("dwn_deconvol_enrich_width", label = h5("width"), value = 10),
+                               numericInput("dwn_deconvol_enrich_height", label = h5("height"), value = 8),
+                               selectInput("dwn_deconvol_enrich_units", label = h5("units"),
+                                           choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                               numericInput("dwn_deconvol_enrich_dpi", label = h5("dpi"), value = 300),
+                               icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                             )
+                      )
+                    ),
+                    plotOutput('deconvol_enrich'),
+                    width = 12
                   )
                 )
         ),

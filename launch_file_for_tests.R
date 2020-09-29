@@ -1,6 +1,7 @@
 source("./R/Data_preparation.R")
 source("./R/Gating.R")
 source("./R/Clustering.R")
+source("./R/Enrichments.R")
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
@@ -17,4 +18,4 @@ library(ConsensusClusterPlus)
 library(utils)
 library(RColorBrewer)
 library(reshape2)
-
+library(ComplexHeatmap)

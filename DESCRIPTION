@@ -30,4 +30,5 @@ Imports:
     FlowSOM,
     utils,
     RColorBrewer,
-    reshape2
+    reshape2,
+    ComplexHeatmap
