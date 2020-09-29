@@ -39,7 +39,7 @@ get_test_fcs_metadata <- function(test_data_dproc){
   if(test_data_dproc == 'test_data'){
     test_files <- c("KPC1_stroma.fcs", "KPC2_stroma.fcs", "KPC3_stroma.fcs", "KPC4_stroma.fcs",
                     "KPC5_stroma.fcs", "KPC6_stroma.fcs", "KPC7_stroma.fcs")
-    test_files <- system.file("extdata",test_files,package = "cytofBrowser")
+    test_files <- system.file("extdata",test_files,package = "cytofBrowserLite")
     md <- get_fcs_metadata(test_files)
   }
   return(md)

@@ -39,13 +39,13 @@ cytofBrowserGUI <-function(){
                                       column(5, actionButton('butt_upload_dproc', label = "Upload files"))
                                     ),
                                     hr(),
+                                    materialSwitch(inputId = 'test_data_upload_dproc', label = h4("build-in dataset"), value = FALSE),
                                     conditionalPanel(
-                                      condition = "input.extr_clust_dproc == true",
-                                      textInput("extr_clust_pattern_dproc",
-                                                label = h5("full or part column name with clusters info (for cytofBrowser and cytofkit : <cluster>)"),
-                                                value = "cluster")),
+                                      condition = "input.test_data_upload_dproc == true",
+                                      selectInput('test_data_dproc', label = NULL, choices = c("Test data" = 'test_data'), selected = "Test data")
+                                    ),
                                     hr(),
-                                    checkboxInput("extr_ann_dp", label = "Extract annotations", value = TRUE)
+                                    materialSwitch(inputId = 'extr_ann_dp', label = h5("Extract annotations"), value = TRUE)
 
                     ),
                     shiny::tabPanel("Transforming",
