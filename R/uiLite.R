@@ -263,7 +263,7 @@ cytofBrowserGUI <-function(){
         shinydashboard::tabItem(tabName = 'data_clustering',
                 fluidRow(
                   tabBox(
-                    tabPanel("clustering",
+                    tabPanel("Clustering",
                              radioButtons("mode_k_choice", label = h4("Choose of number of clusters"),
                                           choices = list("Automatically detect optimum" = 1, "Manually choose" = 2),
                                           selected = 1),
@@ -278,6 +278,11 @@ cytofBrowserGUI <-function(){
                              ),
                              uiOutput("mk_subset_clusters_ui"),
                              actionButton('start_clustering', label = "Clustering")
+                    ),
+                    tabPanel("Cluster management",
+                             uiOutput("mergeing_clust_ui"),
+                             hr(),
+                             uiOutput("rename_clust_ui")
                     )
                   ),
                   shinydashboard::box(
@@ -300,7 +305,6 @@ cytofBrowserGUI <-function(){
                                uiOutput('advanced_opt_clust_ui'),
                                icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
                              )
-
                       ),
                       column(2,
                              dropdownButton(

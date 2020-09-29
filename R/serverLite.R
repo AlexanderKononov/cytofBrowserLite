@@ -572,11 +572,75 @@ cytofBrowser_server <- function(input, output){
     })
   })
 
+  ##### Create UI to choose clusters to merge
+  output$mergeing_clust_ui <- renderUI({
+    if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             selectInput('cluster_to_merge_clust', label = h5("Merged clusters"),
+                         choices = unique(fcs_data$cell_ann$clusters), multiple = TRUE),
+             actionButton("merge_clust", label = "Merge")
+      )
+    )
+  })
+
+  ##### Renew clustering reactive object after merging
+  observeEvent(input$merge_clust, {
+    withProgress(message = "Merging", min =0, max = 5, value = 0,{
+      incProgress(1)
+      fcs_data$cell_ann$clusters <- cluster_merging(fcs_data$cell_ann$clusters, input$cluster_to_merge_clust)
+      incProgress(1)
+      ## Estimation of the distance between clusters
+      clusters$clus_euclid_dist <- get_euclid_dist(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
+                                                   cell_clustering = fcs_data$cell_ann$clusters)
+      incProgress(1)
+      ## Calculation of edges and nodes for graph
+      clusters$edges <- get_edges(clusters$clus_euclid_dist)
+      incProgress(1)
+      clusters$nodes <- get_nodes(clusters$edges, fcs_data$cell_ann$clusters)
+      incProgress(1)
+    })
+  })
+
+  ##### Create UI to rename clusters
+  output$rename_clust_ui <- renderUI({
+    if(is.null(input$current_node_id)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             textInput("new_cluster_name_clust", label = h5("Rename chosen cluster"),
+                       value = as.character(input$current_node_id)),
+             actionButton("rename_clust", label = "Rename")
+      )
+    )
+  })
+
+  ##### Renew cluster reactive object after cluster rename
+  observeEvent(input$rename_clust, {
+    if(is.null(input$new_cluster_name_clust)){return(NULL)}
+    if(input$new_cluster_name_clust == ""){return(NULL)}
+    withProgress(message = "Renaming", min =0, max = 5, value = 0,{
+      incProgress(1)
+      fcs_data$cell_ann$clusters[fcs_data$cell_ann$clusters==input$current_node_id] <- input$new_cluster_name_clust
+      incProgress(1)
+      clusters$clus_euclid_dist$Cluster_1[
+        clusters$clus_euclid_dist$Cluster_1==input$current_node_id] <- input$new_cluster_name_clust
+      clusters$clus_euclid_dist$Cluster_2[
+        clusters$clus_euclid_dist$Cluster_2==input$current_node_id] <- input$new_cluster_name_clust
+      incProgress(1)
+      #clusters$edges$from[clusters$edges$from==input$current_node_id] <- input$new_cluster_name_clust
+      #clusters$edges$to[clusters$edges$to==input$current_node_id] <- input$new_cluster_name_clust
+      incProgress(1)
+      clusters$nodes$label[clusters$nodes$label==input$current_node_id] <- input$new_cluster_name_clust
+      incProgress(1)
+    })
+  })
 
   ##### UI to choose marker for scatter plot with clusters
   output$mk_scatter_clust_ui <- renderUI({
     if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
-    selectInput("mk_target_clusters", label = h4("Plotted marker"),
+    selectInput("mk_target_clusters", label = h5("Plotted marker"),
                 choices = c("clusters", names(fcs_data$use_markers)),selected = 1)
   })
 
