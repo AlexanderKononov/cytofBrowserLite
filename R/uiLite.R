@@ -19,7 +19,6 @@ cytofBrowserGUI <-function(){
         shinydashboard::menuItem("Gating", tabName = 'gating', icon = icon("object-group")),
         shinydashboard::menuItem("Clustering", tabName = 'data_clustering', icon = icon("spinner")),
         shinydashboard::menuItem("Enrichments", tabName = 'data_enrichments', icon = icon("chart-area")),
-        shinydashboard::menuItem("Correlation", tabName = 'data_correlation', icon = icon("braille")),
         shinydashboard::menuItem("Cross-panel", tabName = 'data_crosspanel', icon = icon("clone"))
       )
     ),
@@ -45,12 +44,13 @@ cytofBrowserGUI <-function(){
                                       textInput("extr_clust_pattern_dproc",
                                                 label = h5("full or part column name with clusters info (for cytofBrowser and cytofkit : <cluster>)"),
                                                 value = "cluster")),
+                                    hr(),
+                                    checkboxInput("extr_ann_dp", label = "Extract annotations", value = TRUE)
 
                     ),
                     shiny::tabPanel("Transforming",
                                     checkboxGroupInput("transformation_list", label = h4("Transformations"),
-                                                       choices = list("asinh" = 'asinh', "outlier squeezing" = 'outlier_by_quantile',
-                                                                      "extract cluster info" = 'extract_cluster_info'),
+                                                       choices = list("asinh" = 'asinh', "outlier squeezing" = 'outlier_by_quantile'),
                                                        selected = c("asinh")),
                                     conditionalPanel(
                                       condition = "input.transformation_list.includes('asinh')",
@@ -64,7 +64,8 @@ cytofBrowserGUI <-function(){
                                     actionButton('butt_trans_dproc', label = "Transform")
                     ),
                     shiny::tabPanel("Markers",
-                                    uiOutput('mk_subset_dp_ui')
+                                    uiOutput('mk_subset_dp_ui'),
+                                    uiOutput('extr_ann_manage_dp_ui')
                     ),
                     shiny::tabPanel("Save",
                                     h5("Saving the data as FCS files "),
@@ -486,63 +487,110 @@ cytofBrowserGUI <-function(){
                 )
         ),
 
-        # Fifth tab content
-        tabItem(tabName = 'data_correlation',
-                fluidRow(
-
-                ),
-                fluidRow(
-                  shinydashboard::box(
-
-                  ),
-                  shinydashboard::box(
-                    fluidRow(
-                      column(2,
-
-                      )
-                    ),
-                  ),
-                  tabBox(
-                    tabPanel("Abundance correlations",
-
-                    ),
-                    tabPanel("Marker correlations",
-                    ),
-                    width = 12
-                  )
-                )
-        ),
-
         #############################
-        ##### Sixth tab content #####
+        ##### Fifth tab content #####
         #############################
         tabItem(tabName = 'data_crosspanel',
                 fluidRow(
                   tabBox(
                     tabPanel("Upload panel",
-
+                             h4("FCS files"),
+                             h5("Choose FSC files to upload them as one panel"),
+                             shinyFilesButton('choose_fcs_cross_p', label= h5("Select FCS files"),
+                                              title='Please select clustered FCS files to upload as panel', multiple=TRUE),
+                             hr(),
+                             h4("Name the panel"),
+                             textInput("panel_name_cross_p", label = h5("You can name the new panel (try to use a short name or even one or few letters)")),
+                             hr(),
+                             textInput("extr_clust_pattern_cross_p",
+                                       label = h5("full or part column name with clusters info (for cytofBrowser and cytofkit : <cluster>)"), value = "cluster"),
+                             hr(),
+                             actionButton('butt_upload_cross_p', label = "Upload")
 
                     ),
                     tabPanel("Remove panel",
+                             uiOutput('remove_panel_cross_p_ui')
                     )
                   ),
                   tabBox(
                     tabPanel("Samples content",
+                             plotOutput('content_cross_p')
                     ),
                     tabPanel("Markers content",
+                             plotOutput('mk_content_cross_p')
                     )
                   ),
                   tabBox(
                     tabPanel("Abundance cross-panel correlation",
                              fluidRow(
-
+                               column(2, actionBttn(inputId = "abund_corr_cross_p", style = "material-circle", color = "default" ,icon = icon("play"))),
+                               column(2,
+                                      dropdownButton(
+                                        tags$h4("Advanced options"),
+                                        selectInput('abund_corr_method_cross_p', "Select correlation method:", c("spearman" = 'spearman', "pearson" = 'pearson')),
+                                        selectInput('abund_corr_p_mode_cross_p', "p-value", c("p-value" = "pval", "adjusted p-value" = "padj"), selected = 'padj'),
+                                        uiOutput('abund_corr_padj_method_cross_p_ui'),
+                                        icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "Correlation test options")
+                                      )
+                               ),
+                               column(2,
+                                      dropdownButton(
+                                        selectInput('dwn_abund_corr_cross_p_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png")),
+                                        downloadButton('dwn_abund_corr_cross_p', ""),
+                                        hr(),
+                                        selectInput('dwn_table_abund_corr_cross_p_ext', label = NULL,
+                                                    choices = list("abundance data" = 'abund_data', "correlation data" = 'corr_data'),
+                                                    selected = 'corr_data'),
+                                        downloadButton('dwn_table_abund_corr_cross_p', ""),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
                              ),
+                             plotOutput('plot_abund_corr_cross_p')
                     ),
                     tabPanel("Expressing cell fraction Correlation",
                              fluidRow(
+                               column(2, actionBttn(inputId = "exp_cell_f_corr_cross_p", style = "material-circle", color = "default" ,icon = icon("play"))),
+                               column(4, uiOutput('mk_exp_cell_f_cross_p_ui')),
 
+                               column(2,
+                                      dropdownButton(
+                                        tags$h4("Settings"),
+                                        selectInput("exp_cell_f_corr_method", label =  "Choose the method to get expression cells fraction",
+                                                    choices =c("clustering" = 'clustering', "threshold" = 'threshold'), selected = 'clustering'),
+                                        uiOutput('threshold_exp_cell_f_cross_p_ui'),
+                                        icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "Cell fraction allocation methods")
+                                      )
+                               ),
+                               column(2,
+                                      dropdownButton(
+                                        tags$h4("Advanced options"),
+                                        selectInput('exp_cell_f_corr_method_cross_p', "Select correlation method:", c("spearman" = 'spearman', "pearson" = 'pearson')),
+                                        selectInput('exp_cell_f_corr_p_mode_cross_p', "p-value", c("p-value" = "pval", "adjusted p-value" = "padj"), selected = 'padj'),
+                                        uiOutput('exp_cell_f_corr_padj_method_cross_p_ui'),
+                                        numericInput('exp_cell_f_corr_min_cell_cross_p', "Min expressing cell number ", min = 0, value = 5, step = 1),
+                                        icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "Correlation test options")
+                                      )
+
+                               ),
+                               column(2,
+                                      dropdownButton(
+                                        selectInput('dwn_exp_cell_f_corr_cross_p_ext', label = NULL,
+                                                    choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png")),
+                                        downloadButton('dwn_exp_cell_f_corr_cross_p', ""),
+                                        hr(),
+                                        selectInput('dwn_table_exp_cell_f_corr_cross_p_ext', label = NULL,
+                                                    choices = list("expressing cell fractions" = 'exp_cell_f_data', "correlation data" = 'corr_data'),
+                                                    selected = 'corr_data'),
+                                        downloadButton('dwn_table_exp_cell_f_corr_cross_p', ""),
+                                        icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                                      )
+                               )
                              ),
                              fluidRow(
+                               column(7, plotOutput('plot_exp_cell_f_corr_cross_p')),
+                               column(5, plotOutput('mk_density_plot_cross_p'))
                              )
 
                     ),

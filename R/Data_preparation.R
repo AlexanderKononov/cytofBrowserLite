@@ -167,6 +167,25 @@ get_entire_panel <- function(fcs_raw){
 #entire_panel <- get_entire_panel(fcs_raw)
 
 
+#' Detect columns with annotations
+#'
+#' @param fcs_raw flowDet object
+#'
+#' @return
+get_extr_ann <-function(exprs_data){
+  col_names <- colnames(exprs_data)
+  expectations <- c("tSNE", "UMAP", "clust", "tsne", "umap", "Clust", "Sampl")
+  extr_ann <- unlist(lapply(expectations, function(x){grep(x,col_names)}))
+  if(length(extr_ann) == 0){return(NULL)}
+  extr_ann <- col_names[extr_ann]
+  return(extr_ann)
+}
+
+add_extr_ann_to_cell_ann <- function(exprs_data, extr_ann, cell_ann){
+
+}
+
+
 #' Transformation exprs matrix by asinh fransformation
 #'
 #' @param exprs_data matrix with expression data
