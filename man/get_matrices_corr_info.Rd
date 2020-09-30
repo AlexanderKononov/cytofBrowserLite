@@ -11,7 +11,9 @@ get_matrices_corr_info(
 )
 }
 \arguments{
-\item{method}{}
+\item{abund_cross_p}{mateix with cell abundandans data}
+
+\item{method}{method to calculate correlation}
 }
 \value{
 

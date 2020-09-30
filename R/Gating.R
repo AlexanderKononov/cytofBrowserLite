@@ -156,8 +156,8 @@ get_gates_overlap_data <- function(gates){
 
 #' Create tidy data frame to plot portions of groups from annotations
 #'
-#' @param ann
-#' @param col_names
+#' @param ann annotation data frame
+#' @param col_names vector with column names to plot
 #'
 #' @return
 #' @importFrom RColorBrewer brewer.pal

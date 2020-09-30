@@ -2,12 +2,11 @@
 ##### Matrix for plotting the content of panels
 #' Matrix for plotting the content of panels
 #'
-#' @param md_set
+#' @param fcs_raw_set list with flowSet objects
 #'
 #' @return
 #' @importFrom flowCore sampleNames
 #'
-#' @examples
 get_panel_content <- function(fcs_raw_set){
   samples <- unique(unlist(lapply(fcs_raw_set, function(x) flowCore::sampleNames(x))))
   #samples <- unique(unlist(lapply(md_set, function(x) x[,"file_name"])))
@@ -27,11 +26,10 @@ get_panel_content <- function(fcs_raw_set){
 ##### Extracting of common markers across panels and formed a comparison table
 #' Extracting of common markers across panels and formed a comparison table
 #'
-#' @param use_marker_set
+#' @param use_marker_set list of vectors with markers for analysis
 #'
 #' @return
 #'
-#' @examples
 get_common_markers <- function(use_marker_set){
   mk <- unique(unlist(lapply(use_marker_set, names)))
   mk_panel_content <- matrix(data = "absent", ncol = length(use_marker_set), nrow = length(mk))
@@ -46,6 +44,14 @@ get_common_markers <- function(use_marker_set){
 #get_common_markers(use_marker_set)
 
 ##### Get expression data for one marker
+#' Title
+#'
+#' @param fcs_raw_set list of flowSet objects
+#' @param use_samples list with vectors of samples
+#' @param use_marker_set list with vectors of markers for analysis
+#' @param target_mk list of marker of interest
+#'
+#' @return
 get_mk_exp_data_cross_p <- function(fcs_raw_set, use_samples, use_marker_set, target_mk){
   mk_exp_data_cross_p <- unlist(lapply(names(fcs_raw_set), function(p) {
     lapply(use_samples, function(s) {
@@ -58,12 +64,11 @@ get_mk_exp_data_cross_p <- function(fcs_raw_set, use_samples, use_marker_set, ta
 ##### Compiling the matrix with cluster abundance data for all panels
 #' Compiling the matrix with cluster abundance data for all panels
 #'
-#' @param cell_clustering_list_set
-#' @param use_samples
+#' @param cell_clustering_list_set list with vectos with cluster info
+#' @param use_samples list of vector with samples info
 #'
 #' @return
 #'
-#' @examples
 get_abund_cross_panel <- function(cell_clustering_list_set, use_samples){
   abund_cross_p <- do.call(cbind, lapply(names(cell_clustering_list_set), function(p) {
     p_clusters <- unique(unlist(lapply(use_samples, function(s) unique(unlist(cell_clustering_list_set[[p]][s])))))
@@ -85,13 +90,10 @@ get_abund_cross_panel <- function(cell_clustering_list_set, use_samples){
 ##### Produce three matrices with corr coefficient, p-value and adjusted p-value for abundance correlations within cross panel assay
 #' Produce three matrices with corr coefficient, p-value and adjusted p-value for abundance correlations within cross panel assay
 #'
-#' @param abund_cross_p
-#' @param method
+#' @param abund_cross_p mateix with cell abundandans data
+#' @param method method to calculate correlation
 #'
 #' @return
-
-#'
-#' @examples
 get_matrices_corr_info <- function(abund_cross_p, method_cortest = "spearman", method_padj = "BH"){
   corr_martix <- matrix(0, ncol = ncol(abund_cross_p), nrow = ncol(abund_cross_p))
   colnames(corr_martix) <- colnames(abund_cross_p)
@@ -122,18 +124,17 @@ get_matrices_corr_info <- function(abund_cross_p, method_cortest = "spearman", m
 ##### Get expressing cell fraction data for target marker
 #' Get dxpressing cell fraction data for target marker
 #'
-#' @param fcs_raw_set
-#' @param cell_clustering_list_set
-#' @param use_samples
-#' @param use_marker_set
-#' @param target_mk
-#' @param min_cell_number
+#' @param fcs_raw_set list of flowSet objects
+#' @param cell_clustering_list_set list of vectors with cluster info
+#' @param use_samples list of used samples
+#' @param use_marker_set list of used markers
+#' @param target_mk marker of interest
+#' @param min_cell_number mininal cell number across the samples
 #'
 #' @return
 #' @importFrom flowCore exprs
 #' @importFrom stats kmeans
 #'
-#' @examples
 get_clustering_exp_cell_f_cross_panel <- function(fcs_raw_set, cell_clustering_list_set, use_samples, use_marker_set, target_mk,
                                        min_cell_number = 5){
   exp_cell_f_cross_p <- do.call(cbind, lapply(names(fcs_raw_set), function(p) {
@@ -161,18 +162,17 @@ get_clustering_exp_cell_f_cross_panel <- function(fcs_raw_set, cell_clustering_l
 ##### Extract expression data of one marker for coss-panel analysis as one vector
 #' Extract expression data of one marker for coss-panel analysis as one vector
 #'
-#' @param fcs_raw_set
-#' @param cell_clustering_list_set
-#' @param use_samples
-#' @param use_marker_set
-#' @param target_mk
-#' @param threshold
-#' @param min_cell_number
+#' @param fcs_raw_set list of flowSet objects
+#' @param cell_clustering_list_set list of vectors with cluster info
+#' @param use_samples list of used samples
+#' @param use_marker_set list of used markers
+#' @param target_mk marker of interest
+#' @param threshold threshold fo filtaration
+#' @param min_cell_number mininal cell number across the samples
 #'
 #' @return
 #' @importFrom flowCore exprs
 #'
-#' @examples
 get_threshold_exp_cell_f_cross_panel <- function(fcs_raw_set, cell_clustering_list_set, use_samples, use_marker_set, target_mk,
                                                   threshold = 20,  min_cell_number = 5){
   exp_cell_f_cross_p <- do.call(cbind, lapply(names(fcs_raw_set), function(p) {
@@ -197,12 +197,10 @@ get_threshold_exp_cell_f_cross_panel <- function(fcs_raw_set, cell_clustering_li
 
 #' Preparing the table with cross-panel correlations for downloading
 #'
-#' @param abund_corr_info
+#' @param abund_corr_info list of matrices with correlation information
 #'
 #' @return
 #' @importFrom reshape2 melt
-#'
-#' @examples
 get_write_corr_info_cross_p <- function(abund_corr_info){
   write_corr_info_cross_p <- reshape2::melt(abund_corr_info$corr_coef)
   rownames(write_corr_info_cross_p) <- paste0(as.character(write_corr_info_cross_p[,1]), "_vs_", as.character(write_corr_info_cross_p[,2]))

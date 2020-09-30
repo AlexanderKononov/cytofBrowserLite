@@ -7,7 +7,7 @@
 get_common_markers(use_marker_set)
 }
 \arguments{
-\item{use_marker_set}{}
+\item{use_marker_set}{list of vectors with markers for analysis}
 }
 \value{
 

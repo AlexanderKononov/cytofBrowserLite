@@ -7,7 +7,7 @@
 get_panel_content(fcs_raw_set)
 }
 \arguments{
-\item{md_set}{}
+\item{fcs_raw_set}{list with flowSet objects}
 }
 \value{
 

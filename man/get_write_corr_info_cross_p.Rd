@@ -7,7 +7,7 @@
 get_write_corr_info_cross_p(abund_corr_info)
 }
 \arguments{
-\item{abund_corr_info}{}
+\item{abund_corr_info}{list of matrices with correlation information}
 }
 \value{
 

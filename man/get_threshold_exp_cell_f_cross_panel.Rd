@@ -15,7 +15,19 @@ get_threshold_exp_cell_f_cross_panel(
 )
 }
 \arguments{
-\item{min_cell_number}{}
+\item{fcs_raw_set}{list of flowSet objects}
+
+\item{cell_clustering_list_set}{list of vectors with cluster info}
+
+\item{use_samples}{list of used samples}
+
+\item{use_marker_set}{list of used markers}
+
+\item{target_mk}{marker of interest}
+
+\item{threshold}{threshold fo filtaration}
+
+\item{min_cell_number}{mininal cell number across the samples}
 }
 \value{
 

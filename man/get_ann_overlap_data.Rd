@@ -7,7 +7,9 @@
 get_ann_overlap_data(ann, col_names = NULL)
 }
 \arguments{
-\item{col_names}{}
+\item{ann}{annotation data frame}
+
+\item{col_names}{vector with column names to plot}
 }
 \value{
 

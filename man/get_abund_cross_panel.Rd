@@ -7,7 +7,9 @@
 get_abund_cross_panel(cell_clustering_list_set, use_samples)
 }
 \arguments{
-\item{use_samples}{}
+\item{cell_clustering_list_set}{list with vectos with cluster info}
+
+\item{use_samples}{list of vector with samples info}
 }
 \value{
 
