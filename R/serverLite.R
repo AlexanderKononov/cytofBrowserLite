@@ -28,7 +28,6 @@ cytofBrowser_server <- function(input, output){
                                        perplexity = 30, theta = 0.5, max_iter = 1000)
   gates <- reactiveValues()
   clusters <- reactiveValues()
-  cluster_settings <- reactiveValues(perplexity = 30, theta = 0.5, max_iter = 1000, size_fuse = 5000)
   plots <- reactiveValues()
 
   ##### Showing selected fcs files
@@ -582,7 +581,8 @@ cytofBrowser_server <- function(input, output){
 
   ##### Action on the Clustering button
   observeEvent(input$start_clustering, {
-    withProgress(message = "Clustering", min =0, max = 5, value = 0,{
+    withProgress(message = "Clustering", min =0, max = 4, value = 0,{
+      incProgress(1, detail = "clustering")
       ## Clustering with set parameters
       clusters$clust_markers <- fcs_data$use_markers[!(names(fcs_data$use_markers) %in% input$exclude_mk_clusters)]
       if(input$mode_k_choice == 1){k <- input$maxK}
@@ -594,16 +594,30 @@ cytofBrowser_server <- function(input, output){
       clusters$clusters <- get_all_consensusClust(som = som, mc = mc)
       if(input$mode_k_choice == 1){k <- get_optimal_clusters(mc, rate_var_expl = input$rate_var_explan)}
       fcs_data$cell_ann$clusters <- clusters$clusters[,as.character(k)]
+      incProgress(1)
+    })
+  })
 
+  ##### Update reactive objects euclid_dist
+  observe({
+    if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
+    withProgress(message = "Cluster estimation", min =0, max = 2, value = 0,{
       incProgress(1, detail = "distance between clusters")
-      ## Estimation of the distance between clusters
-      clusters$clus_euclid_dist <- get_euclid_dist(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
+      clusters$clus_euclid_dist <- get_euclid_dist(exprs_data = isolate(fcs_data$exprs_data), use_markers = isolate(fcs_data$use_markers),
                                                    cell_clustering = fcs_data$cell_ann$clusters)
       incProgress(1, detail = "graph elements")
-      ## Calculation of edges and nodes for graph
+    })
+  })
+
+  ##### Update reactive objects with nodes and edges
+  observe({
+    if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
+    withProgress(message = "Cluster estimation", min =0, max = 3, value = 0,{
+      incProgress(1, detail = "graph elements")
       clusters$edges <- get_edges(clusters$clus_euclid_dist)
-      clusters$nodes <- get_nodes(clusters$edges, fcs_data$cell_ann$clusters)
       incProgress(1, detail = "drawing scatter plot")
+      clusters$nodes <- get_nodes(clusters$edges, fcs_data$cell_ann$clusters)
+      incProgress(1)
     })
   })
 
@@ -622,20 +636,7 @@ cytofBrowser_server <- function(input, output){
 
   ##### Renew clustering reactive object after merging
   observeEvent(input$merge_clust, {
-    withProgress(message = "Merging", min =0, max = 5, value = 0,{
-      incProgress(1)
-      fcs_data$cell_ann$clusters <- cluster_merging(fcs_data$cell_ann$clusters, input$cluster_to_merge_clust)
-      incProgress(1)
-      ## Estimation of the distance between clusters
-      clusters$clus_euclid_dist <- get_euclid_dist(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
-                                                   cell_clustering = fcs_data$cell_ann$clusters)
-      incProgress(1)
-      ## Calculation of edges and nodes for graph
-      clusters$edges <- get_edges(clusters$clus_euclid_dist)
-      incProgress(1)
-      clusters$nodes <- get_nodes(clusters$edges, fcs_data$cell_ann$clusters)
-      incProgress(1)
-    })
+    fcs_data$cell_ann$clusters <- cluster_merging(fcs_data$cell_ann$clusters, input$cluster_to_merge_clust)
   })
 
   ##### Create UI to rename clusters
@@ -655,21 +656,7 @@ cytofBrowser_server <- function(input, output){
   observeEvent(input$rename_clust, {
     if(is.null(input$new_cluster_name_clust)){return(NULL)}
     if(input$new_cluster_name_clust == ""){return(NULL)}
-    withProgress(message = "Renaming", min =0, max = 5, value = 0,{
-      incProgress(1)
-      fcs_data$cell_ann$clusters[fcs_data$cell_ann$clusters==input$current_node_id] <- input$new_cluster_name_clust
-      incProgress(1)
-      clusters$clus_euclid_dist$Cluster_1[
-        clusters$clus_euclid_dist$Cluster_1==input$current_node_id] <- input$new_cluster_name_clust
-      clusters$clus_euclid_dist$Cluster_2[
-        clusters$clus_euclid_dist$Cluster_2==input$current_node_id] <- input$new_cluster_name_clust
-      incProgress(1)
-      #clusters$edges$from[clusters$edges$from==input$current_node_id] <- input$new_cluster_name_clust
-      #clusters$edges$to[clusters$edges$to==input$current_node_id] <- input$new_cluster_name_clust
-      incProgress(1)
-      clusters$nodes$label[clusters$nodes$label==input$current_node_id] <- input$new_cluster_name_clust
-      incProgress(1)
-    })
+    fcs_data$cell_ann$clusters[fcs_data$cell_ann$clusters==input$current_node_id] <- input$new_cluster_name_clust
   })
 
   ##### UI to choose marker for scatter plot with clusters
@@ -679,7 +666,7 @@ cytofBrowser_server <- function(input, output){
                 choices = c("clusters", names(fcs_data$use_markers)),selected = 1)
   })
 
-  ##### UI for advanced options data preparation
+  ##### UI for advanced options for clustering page
   output$advanced_opt_clust_ui <- renderUI({
     if(is.null(input$method_plot_clust)){return(NULL)}
     if(is.null(input$method_plot_clust)){return(NULL)}
@@ -727,7 +714,7 @@ cytofBrowser_server <- function(input, output){
     return(plt)
   })
 
-  ##### Rewrite for scatter plot
+  ##### Rewrite for scatter plot in clusteringpage
   observeEvent(input$redraw_clust, {
     withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
       incProgress(1, detail = "Subsampling" )
@@ -963,6 +950,155 @@ cytofBrowser_server <- function(input, output){
     }
   )
 
+  ########################
+  ####  Annotations   ####
+  ########################
+
+  ##### UI to chose annotation for rename annotaions
+  output$chose_managment_ann_ui <- renderUI({
+    if(is.null(fcs_data$cell_ann)){return(NULL)}
+    col_names <- colnames(fcs_data$cell_ann)
+    col_names <- col_names[!(col_names %in% c("all_cells", "tSNE1", "tSNE2", "UMAP1", "UMAP2", "samples"))]
+    if(length(col_names) < 1){return(NULL)}
+    sel <- col_names[1]
+    if("clusters" %in% col_names){sel <- "clusters"}
+    selectInput('gp_managment_ann', label = h5("Annotation to manage"), choices = col_names, selected = sel)
+  })
+
+  ##### Dynamic UI for rename each group in chosen annotation
+  output$managment_ann_ui <- renderUI({
+    if(is.null(input$gp_managment_ann)){return(NULL)}
+    lapply(unique(fcs_data$cell_ann[,input$gp_managment_ann]), function(i) {
+      textInput(paste0('group', i), label = NULL, value = i)
+    })
+  })
+
+  ##### change name in annotations
+  observeEvent(input$rename_groups, {
+    for (i in unique(fcs_data$cell_ann[,input$gp_managment_ann])){
+      tmp <- fcs_data$cell_ann[,input$gp_managment_ann]
+      tmp[tmp == i] <- input[[paste0('group', i)]]
+      fcs_data$cell_ann[,input$gp_managment_ann] <- tmp
+    }
+  })
+
+
+
+  ##### UI for advanced options annotatios page
+  output$advanced_opt_ann_ui <- renderUI({
+    if(is.null(input$method_plot_ann)){return(NULL)}
+    if(input$method_plot_ann == 'tSNE'){
+      ui <- fluidRow(
+        column(1),
+        column(10,
+               numericInput("perplexity_ann", "tSNE Perplexity", min = 0, max = 200, value = 30, step = 5),
+               numericInput("theta_ann", "tSNE Theta", min = 0, max = 1, value = 0.5, step = 0.1),
+               numericInput("max_iter_ann", "tSNE Iterations", value = 1000, step = 500)
+        )
+      )
+    }
+    if(input$method_plot_ann == 'UMAP'){ui <- NULL}
+    return(ui)
+  })
+
+  ##### Isolate number of plot from continiouse rection
+  annotations <- reactiveValues(num_plot = 4)
+  observeEvent(input$redraw_ann, {annotations$num_plot <- input$num_plot_ann})
+
+  ##### UI to choose marker for scatter plots for annotating
+  observe({
+    lapply(1:annotations$num_plot, function(x){
+      output[[paste0("mk_ann_ui", x)]] <- renderUI({
+        selectInput(paste0("mk_target_ann", x), label = NULL,
+                    choices = c(input$gp_managment_ann, names(fcs_data$use_markers)),selected = 1)
+      })
+    })
+  })
+
+
+  ##### Drawing scatter plots for annotating
+  observe({
+    if(!is.numeric(input$num_plot_ann)){return(NULL)}
+    lapply(1:annotations$num_plot, function(x){
+      output[[paste0("plots_ann", x)]] <- renderPlot({
+        if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
+        if(is.null(fcs_data$subset_coord)){return(NULL)}
+        color_mk <- "clusters"
+        if(!is.null(input[[paste0("mk_target_ann",x)]])){color_mk <- input[[paste0("mk_target_ann",x)]]}
+        if(color_mk %in% names(fcs_data$use_markers)){color_mk <- fcs_data$use_markers[color_mk]}
+        if(data_prep_settings$method == "tSNE"){
+          plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "tSNE1"],
+                                  Y = fcs_data$cell_ann[fcs_data$subset_coord, "tSNE2"])}
+        if(data_prep_settings$method == "UMAP"){
+          plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP1"],
+                                  Y = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP2"])}
+        if(color_mk %in% colnames(fcs_data$cell_ann)){
+          plot_data$mk <- as.factor(fcs_data$cell_ann[fcs_data$subset_coord, "clusters"])}
+        if(!(color_mk %in% colnames(fcs_data$cell_ann))){
+          plot_data$mk <- fcs_data$exprs_data[fcs_data$subset_coord, color_mk]}
+        plt <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
+          geom_point(size = input$point_size_clust)
+        if(color_mk == "clusters"){plt <- plt + scale_color_manual(values = as.character(clusters$nodes$color))}
+        if(color_mk != "clusters"){plt <- plt + scale_color_gradient2(midpoint=0.5, low='blue', mid='gray', high='red')}
+        plt <- plt + theme_bw() + labs(color = color_mk)
+        return(plt)
+      })
+    })
+  })
+
+
+  output$plot_set_ann_ui <- renderUI({
+    if(is.null(fcs_data$cell_ann)){return(NULL)}
+    row_num <- (annotations$num_plot %/% 2)+(annotations$num_plot %% 2)
+    ui <- fluidPage(
+      column(6,
+             lapply(1:row_num, function(x){
+               fluidRow(
+                 uiOutput(paste0("mk_ann_ui", x)),
+                 plotOutput(paste0("plots_ann", x))
+               )
+             })
+             ),
+      column(6,
+             lapply(((row_num + 1):annotations$num_plot), function(x){
+               fluidRow(
+                 uiOutput(paste0("mk_ann_ui", x)),
+                 plotOutput(paste0("plots_ann", x))
+               )
+             })
+             )
+    )
+    return(ui)
+  })
+
+  ##### Rewrite for scatter plot in Annotation
+  observeEvent(input$redraw_ann, {
+    withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
+      incProgress(1, detail = "Subsampling" )
+      ## If subset was changed
+      if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size_ann, input$fuse_ann))){
+        if(!is.null(input$sampling_size_clust)){data_prep_settings$sampling_size <- input$sampling_size_clust}
+        if(!is.null(input$fuse_ann)){data_prep_settings$fuse <- input$fuse_ann}
+        fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
+                                                  sampling_size = data_prep_settings$sampling_size,
+                                                  fuse = data_prep_settings$fuse,
+                                                  size_fuse = data_prep_settings$size_fuse)
+      }
+      ## Repeat dimension reducing
+      incProgress(1, detail = "Dimention redicing" )
+      dim_reduce_force <- FALSE
+      if(!is.null(input$method_plot_ann)){data_prep_settings$method <- input$method_plot_ann; dim_reduce_force <- TRUE}
+      if(!is.null(input$perplexity_ann)){data_prep_settings$perplexity <- input$perplexity_ann; dim_reduce_force <- TRUE}
+      if(!is.null(input$theta_ann)){data_prep_settings$theta <- input$theta_ann; dim_reduce_force <- TRUE}
+      if(!is.null(input$max_iter_ann)){data_prep_settings$max_iter <- input$max_iter_ann; dim_reduce_force <- TRUE}
+      fcs_data$cell_ann <- get_dim_reduce(fcs_data$exprs_data, fcs_data$cell_ann,
+                                          fcs_data$subset_coord, fcs_data$use_markers,force = dim_reduce_force,
+                                          method = data_prep_settings$method, perplexity = data_prep_settings$perplexity,
+                                          theta = data_prep_settings$theta, max_iter = data_prep_settings$max_iter,
+                                          pca_param = FALSE, check_duplicates = FALSE, seed = 1234)
+      incProgress(1, detail = "Plotting" )
+    })
+  })
 
   ########################
   ####  Cross-panel   ####

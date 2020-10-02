@@ -18,6 +18,7 @@ cytofBrowserGUI <-function(){
         shinydashboard::menuItem("Data", tabName = 'data_processing', icon = icon("bars")),
         shinydashboard::menuItem("Gating", tabName = 'gating', icon = icon("object-group")),
         shinydashboard::menuItem("Clustering", tabName = 'data_clustering', icon = icon("spinner")),
+        shinydashboard::menuItem("Annotations", tabName = 'data_annotations', icon = icon("buromobelexperte")),
         shinydashboard::menuItem("Enrichments", tabName = 'data_enrichments', icon = icon("chart-area")),
         shinydashboard::menuItem("Cross-panel", tabName = 'data_crosspanel', icon = icon("clone"))
       )
@@ -265,17 +266,17 @@ cytofBrowserGUI <-function(){
                 fluidRow(
                   tabBox(
                     tabPanel("Clustering",
-                             radioButtons("mode_k_choice", label = h4("Choose of number of clusters"),
+                             radioButtons("mode_k_choice", label = h5("Choose of number of clusters"),
                                           choices = list("Automatically detect optimum" = 1, "Manually choose" = 2),
                                           selected = 1),
                              conditionalPanel(
                                condition = "input.mode_k_choice == 1",
-                               numericInput("rate_var_explan", label = h4("Rate of explained variance"), value = 0.9),
-                               numericInput("maxK", label = h4("Max number of clusters"), value = 20)
+                               numericInput("rate_var_explan", label = h5("Rate of explained variance"), value = 0.9),
+                               numericInput("maxK", label = h5("Max number of clusters"), value = 20)
                              ),
                              conditionalPanel(
                                condition = "input.mode_k_choice == 2",
-                               numericInput("k", label = h4("Choose number of clusters"), value = 8)
+                               numericInput("k", label = h5("Choose number of clusters"), value = 8)
                              ),
                              uiOutput("mk_subset_clusters_ui"),
                              actionButton('start_clustering', label = "Clustering")
@@ -293,7 +294,7 @@ cytofBrowserGUI <-function(){
                              dropdownButton(
                                tags$h4("Options of plotting"),
                                numericInput('sampling_size_clust', label = h5("Cell fraction to display"), value = 0.5, step = 0.1),
-                               materialSwitch(inputId = 'fuse_clust', label = h4("Size fuse"), value = TRUE),
+                               materialSwitch(inputId = 'fuse_clust', label = h5("Size fuse"), value = TRUE),
                                selectInput("method_plot_clust", label = h5("Visualisation method"),
                                            choices = list("tSNE" = "tSNE", "UMAP" = "UMAP"),selected = "tSNE"),
                                numericInput('point_size_clust', label = h5("Size of points"), value = 0.3, step = 0.1),
@@ -388,6 +389,50 @@ cytofBrowserGUI <-function(){
                   )
                 )
         ),
+
+        ##################################
+        ##### First tab content      #####
+        ##################################
+        tabItem(tabName = 'data_annotations',
+                shinydashboard::box(
+                  fluidRow(
+                    column(1),
+                    column(11,
+                           uiOutput('chose_managment_ann_ui'),
+                           uiOutput('managment_ann_ui'),
+                           actionButton('rename_groups', label = "Rename")
+                           ),                  ),
+                  width = 3
+                ),
+                shinydashboard::box(
+                  fluidRow(
+                    column(3, numericInput('num_plot_ann', label = h5("Number of plots"), value = 4, step = 1)),
+                    column(2, actionBttn(inputId = "redraw_ann", style = "material-circle", color = "default" ,icon = icon("redo"))),
+                    column(2,
+                           dropdownButton(
+                             tags$h5("Options of plotting"),
+                             numericInput('sampling_size_ann', label = h5("Cell fraction to display"), value = 0.5, step = 0.1),
+                             materialSwitch(inputId = 'fuse_ann', label = h5("Size fuse"), value = TRUE),
+                             selectInput("method_plot_ann", label = h5("Visualisation method"),
+                                         choices = list("tSNE" = "tSNE", "UMAP" = "UMAP"),selected = "tSNE"),
+                             numericInput('point_size_ann', label = h5("Size of points"), value = 0.3, step = 0.1),
+                             icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                           )
+                    ),
+                    column(2,
+                           dropdownButton(
+                             tags$h4("Advanced options"),
+                             uiOutput('advanced_opt_ann_ui'),
+                             icon = icon("gear"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                           )
+                    )
+                  ),
+                  fluidRow(
+                    uiOutput('plot_set_ann_ui')
+                  ),
+                  width = 9
+                ),
+                ),
 
         #############################
         #### Fourth tab content #####
@@ -599,6 +644,7 @@ cytofBrowserGUI <-function(){
 
                 )
         )
+        ################
       )
     )
   )
