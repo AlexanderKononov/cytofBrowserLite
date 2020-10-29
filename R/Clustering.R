@@ -30,9 +30,10 @@ get_som <- function(fcs_raw, clust_markers, seed = 1234){
 #'
 get_consensusClust <- function(som, maxK = 20, seed = 1234){
   mc <- ConsensusClusterPlus::ConsensusClusterPlus(t(som$map$codes), maxK = maxK, reps = 100,
-                             pItem = 0.9, pFeature = 1, title = "consensus_plots", plot = "png",
+                             pItem = 0.9, pFeature = 1, title = "consensus_plots", plot = "’pngBMP’",
                              clusterAlg = "hc", innerLinkage = "average", finalLinkage = "average",
                              distance = "euclidean", seed = seed)
+  unlink("./consensus_plots", recursive = TRUE)
   return(mc)
 }
 
