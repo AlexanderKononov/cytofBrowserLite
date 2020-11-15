@@ -23,7 +23,7 @@ cytofBrowser_server <- function(input, output){
   shinyFiles::shinyFileChoose(input, 'choose_fcs_dp', roots=roots, filetypes=c('', 'fcs'))
 
   ##### Create reactive object to store the CyTOF data
-  fcs_data <-reactiveValues()
+  fcs_data <-reactiveValues(trans_to_do = c("asinh"))
   data_prep_settings <- reactiveValues(sampling_size = 0.5, fuse = TRUE, size_fuse = 3000, method = "tSNE",
                                        perplexity = 30, theta = 0.5, max_iter = 1000)
   gates <- reactiveValues()
@@ -49,7 +49,7 @@ cytofBrowser_server <- function(input, output){
     if((length(input$choose_fcs_dp) <= 1) & !input$test_data_upload_dproc){
       showNotification("Files were not chosen", type = "warning")
       return(NULL)}
-    withProgress(message = "Extraction data", min =0, max = 11, value = 0,{
+    withProgress(message = "Extraction data", min =0, max = 12, value = 0,{
       ## Get row data fcs files
       if(input$test_data_upload_dproc){
         showNotification("Build-in data set were not uploaded", type = "warning")
@@ -69,6 +69,12 @@ cytofBrowser_server <- function(input, output){
       fcs_data$entire_panel <- get_entire_panel(fcs_raw = fcs_data$fcs_raw)
       incProgress(1, detail = "Cell number calculation" )
       fcs_data$cell_number <- get_cell_number(fcs_data$fcs_raw)
+      incProgress(1, detail = "Transformations" )
+      fcs_data$trans <- get_extr_transformations(fcs_data$exprs_data, fcs_data$use_markers, mode = "dataset")
+      fcs_data$trans_to_do <- check_transformation_list(fcs_data$trans_to_do, fcs_data$trans)
+      fcs_data$exprs_data <- get_transformations(fcs_data$trans_to_do, fcs_data$exprs_data, fcs_data$use_markers)
+      fcs_data$trans <- c(fcs_data$trans, fcs_data$trans_to_do)
+      fcs_data$trans_to_do <- c()
       incProgress(1, detail = "Creating of cell annotation" )
       fcs_data$cell_ann <- data.frame(all_cells = rep("cell", sum(fcs_data$cell_number$cell_nmbr)),
                                 samples = rep(fcs_data$cell_number$smpl, fcs_data$cell_number$cell_nmbr),
@@ -115,8 +121,8 @@ cytofBrowser_server <- function(input, output){
       geom_point(size = input$point_size) +
       scale_color_gradient2(midpoint = 0.5, low = 'blue', mid = "gray",  high = 'red') +
       labs(color = color_mk) +
-      theme_bw()+
-      guides(colour = guide_legend(override.aes = list(size=2)))
+      theme_bw()
+      #guides(colour = guide_legend(override.aes = list(size=2)))
     return(plots$scatter_dp)
   })
 
@@ -150,22 +156,29 @@ cytofBrowser_server <- function(input, output){
     })
   })
 
+  ##### Show the implemented transformations
+  output$trans_dp <- renderPrint({fcs_data$trans})
 
   #### Reaction to button "Transform" in "Data processing"
   observeEvent(input$butt_trans_dproc, {
     if(is.null(fcs_data$exprs_data)){return(NULL)}
     ## Transform row data to scaled data by set parameters
+
     withProgress(message = "Transformation", min =0, max = 3, value = 0,{
       incProgress(1, detail = "Transformation" )
-      if('asinh' %in% input$transformation_list){
-        fcs_data$exprs_data <- exprs_asinh_transformation(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
-                                                       cofactor = input$cofactor)
-      }
+      fcs_data$trans_to_do <- c(fcs_data$trans_to_do, input$transformation_list)
+      fcs_data$trans_to_do <- check_transformation_list(fcs_data$trans_to_do, fcs_data$trans)
+      fcs_data$exprs_data <- get_transformations(fcs_data$trans_to_do, fcs_data$exprs_data, fcs_data$use_markers)
+      fcs_data$trans <- c(fcs_data$trans, fcs_data$trans_to_do)
+      #if('asinh' %in% input$transformation_list){
+      #  fcs_data$exprs_data <- exprs_asinh_transformation(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
+      #                                                 cofactor = input$cofactor)
+      #}
       incProgress(1, detail = "Outlier detection" )
-      if('outlier_by_quantile' %in% isolate(input$transformation_list)){
-        fcs_data$exprs_data <- exprs_outlier_squeezing(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
-                                                    quantile = input$quantile)
-      }
+      #if('outlier_squeezing' %in% isolate(input$transformation_list)){
+      #  fcs_data$exprs_data <- exprs_outlier_squeezing(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
+      #                                              quantile = input$quantile)
+      # }
       incProgress(1)
     })
   })

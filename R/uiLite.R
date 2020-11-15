@@ -50,15 +50,18 @@ cytofBrowserGUI <-function(){
 
                     ),
                     shiny::tabPanel("Transforming",
+                                    h4("Implemented transformations"),
+                                    verbatimTextOutput('trans_dp'),
+                                    hr(),
                                     checkboxGroupInput("transformation_list", label = h4("Transformations"),
-                                                       choices = list("asinh" = 'asinh', "outlier squeezing" = 'outlier_by_quantile'),
+                                                       choices = list("asinh" = 'asinh', "outlier squeezing" = 'outlier_squeezing'),
                                                        selected = c("asinh")),
                                     conditionalPanel(
                                       condition = "input.transformation_list.includes('asinh')",
                                       numericInput("cofactor", label = h4("Cofactor for dividing"), value = 5)
                                     ),
                                     conditionalPanel(
-                                      condition = "input.transformation_list.includes('outlier_by_quantile')",
+                                      condition = "input.transformation_list.includes('outlier_squeezing')",
                                       numericInput("quantile", label = h4("Quantile for outlier detection"), value = 0.01)
                                     ),
                                     hr(),

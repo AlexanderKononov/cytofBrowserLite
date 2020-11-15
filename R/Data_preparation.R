@@ -185,6 +185,31 @@ add_extr_ann_to_cell_ann <- function(exprs_data, extr_ann, cell_ann){
 
 }
 
+#' Detecting of implemented transformation by data
+#'
+#' @param exprs_data data frame with enrichment data
+#' @param use_markers list of markers to consider
+#' @param mode mode of running the function ("dataset": to consider all data  together, "markers": to consider each marker independently)
+#'
+#' @return
+get_extr_transformations <- function(exprs_data, use_markers, mode = "dataset"){
+  trans <- c()
+  max_values <- apply(exprs_data[,use_markers], 2, max)
+  min_values <- apply(exprs_data[,use_markers], 2, min)
+  mean_values <- colMeans(exprs_data[,use_markers])
+  if(mode == "dataset"){
+    max_values <- max(max_values)
+    min_values <- min(min_values)
+    mean_values <- mean(mean_values)
+  }
+  if((max_values > 100) & (min_values >= 0)){return(trans)}
+  if((min_values >= 0) & (mean_values > 0) & (mean_values < 2)){trans <- c(trans, "log-like")}
+  if((max_values <= 1) & (min_values >= 0)){trans <- c(trans, "normalised")}
+  if((min_values <= 0) & (max_values <= 20)){trans <- c(trans, "z-score")}
+  return(trans)
+}
+
+
 
 #' Transformation exprs matrix by asinh fransformation
 #'
@@ -225,6 +250,42 @@ exprs_outlier_squeezing <- function(exprs_data, use_markers, quantile = 0.01){
 ### test
 #exprs_data <- exprs_outlier_squeezing(exprs_data, use_markers)
 
+#' check does the transformation which will be implemented already implemented
+#'
+#' @param trans_to_do list of transformation to implementation
+#' @param trans list of transformations which already implemented
+#'
+#' @return
+
+check_transformation_list <- function(trans_to_do, trans){
+  if(any(c("log","asinh","log-like") %in% trans)){trans <- c(trans, "log","asinh","log-like")}
+  trans_to_do <- trans_to_do[!(trans_to_do %in% trans)]
+  return(trans_to_do)
+}
+
+
+#' Implement the transformation from trans_to_do if they are not in trans list
+#'
+#' @param trans_to_do list of transformations for implementation
+#' @param exprs_data data frame with enrichment data
+#' @param use_markers list of considered markers
+#' @param cofactor co-factior for asinh transformation
+#' @param quantile quantile for outlier detection
+#'
+#' @return
+
+get_transformations <- function(trans_to_do, exprs_data, use_markers,
+                                cofactor = 5, quantile = 0.01){
+  if("log" %in% trans_to_do){
+    exprs_data[,use_markers] <- log(exprs_data[,use_markers])}
+  if("asinh" %in% trans_to_do){
+    exprs_data <- exprs_asinh_transformation(exprs_data, use_markers, cofactor = cofactor)}
+  if("outlier_squeezing" %in% trans_to_do){
+    exprs_data <- exprs_outlier_squeezing(exprs_data, use_markers, quantile = quantile)}
+  if("z-score" %in% trans_to_do){
+    exprs_data[,use_markers] <- apply(exprs_data[,use_markers], 2, scale)}
+  return(exprs_data)
+}
 
 #' Extract cell number
 #'
