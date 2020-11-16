@@ -51,7 +51,6 @@ get_modif_sparse_data_gating <- function(gated_data_subset, mk = c("gating_mk1",
   for (i in mk){
     data_vector <- new_gated_data_subset[,i]
     qu <- stats::quantile(data_vector)
-    print(qu)
     if((qu["50%"] == qu["75%"]) & (qu["25%"] == qu["50%"])){
       n_modif <- (as.integer(length(data_vector)*0.25)+1)-sum(data_vector > qu["50%"])
       adj_modif <- (max(data_vector) - min(data_vector)) *0.001
@@ -63,6 +62,28 @@ get_modif_sparse_data_gating <- function(gated_data_subset, mk = c("gating_mk1",
   return(new_gated_data_subset)
 }
 
+#' Subset of data for gating
+#'
+#' @param gated_data_subset data with 2columns for subset
+#' @param size_fuse available size of subset
+#' @param centers number of k for k-mean grouping
+#' @param iter.max number of iterations for k-mean grouping
+#'
+#' @return
+get_size_subset_gating_data <- function(gated_data_subset, size_fuse = 10000,
+                                        centers = 100, iter.max = 10){
+  sampling_size <- size_fuse/nrow(gated_data_subset)
+  k_clust <- kmeans(gated_data_subset, centers = centers, iter.max = iter.max)
+  k_portion <- as.integer((table(k_clust$cluster) + 0.1) * sampling_size)
+  k_portion[k_portion < 30] <- table(k_clust$cluster)[k_portion < 30]
+  names(k_portion) <- names(table(k_clust$cluster))
+  ## Get subsample indices
+  set.seed(1234)
+  subset_coord <- unlist(lapply(names(k_portion), function(i){
+    sample(which(k_clust$cluster == i), k_portion[i], replace = FALSE)}))
+  subset_coord <- subset_coord[order(as.integer(subset_coord))]
+  return(subset_coord)
+}
 
 
 #' Function adds set of gates to cell annotation object

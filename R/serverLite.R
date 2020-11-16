@@ -122,7 +122,6 @@ cytofBrowser_server <- function(input, output){
       scale_color_gradient2(midpoint = 0.5, low = 'blue', mid = "gray",  high = 'red') +
       labs(color = color_mk) +
       theme_bw()
-      #guides(colour = guide_legend(override.aes = list(size=2)))
     return(plots$scatter_dp)
   })
 
@@ -163,22 +162,13 @@ cytofBrowser_server <- function(input, output){
   observeEvent(input$butt_trans_dproc, {
     if(is.null(fcs_data$exprs_data)){return(NULL)}
     ## Transform row data to scaled data by set parameters
-
     withProgress(message = "Transformation", min =0, max = 3, value = 0,{
-      incProgress(1, detail = "Transformation" )
+      incProgress(1)
       fcs_data$trans_to_do <- c(fcs_data$trans_to_do, input$transformation_list)
       fcs_data$trans_to_do <- check_transformation_list(fcs_data$trans_to_do, fcs_data$trans)
+      incProgress(1)
       fcs_data$exprs_data <- get_transformations(fcs_data$trans_to_do, fcs_data$exprs_data, fcs_data$use_markers)
       fcs_data$trans <- c(fcs_data$trans, fcs_data$trans_to_do)
-      #if('asinh' %in% input$transformation_list){
-      #  fcs_data$exprs_data <- exprs_asinh_transformation(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
-      #                                                 cofactor = input$cofactor)
-      #}
-      incProgress(1, detail = "Outlier detection" )
-      #if('outlier_squeezing' %in% isolate(input$transformation_list)){
-      #  fcs_data$exprs_data <- exprs_outlier_squeezing(exprs_data = fcs_data$exprs_data, use_markers = fcs_data$use_markers,
-      #                                              quantile = input$quantile)
-      # }
       incProgress(1)
     })
   })
@@ -439,7 +429,7 @@ cytofBrowser_server <- function(input, output){
     if(is.null(input$gating_subset)){return(NULL)}
     if(is.null(input$gating_mk1)){return(NULL)}
     if(is.null(input$gating_mk2)){return(NULL)}
-    withProgress(message = "Gate drawing", min =0, max = 3, value = 0,{
+    withProgress(message = "Making of subset data", min =0, max = 3, value = 0,{
       incProgress(1)
       gates$gated_data_subset <- get_exprs_data_for_gating(exprs_data = fcs_data$exprs_data,
                                                      gating_subset = gates$gates[,input$gating_subset],
@@ -447,46 +437,73 @@ cytofBrowser_server <- function(input, output){
                                                      gating_mk2 = fcs_data$entire_panel[input$gating_mk2])
       incProgress(1)
       gates$gated_data_subset <- get_modif_sparse_data_gating(gates$gated_data_subset)
+      gates$subset_coord <- c(1:nrow(gates$gated_data_subset))
+      if(input$fuse_gate){gates$subset_coord <- get_size_subset_gating_data(gates$gated_data_subset)}
       incProgress(1)
     })
   })
 
 
-  ### Drawing interactive dencity plot for gating
+  ### Drawing interactive density plot for gating
   output$scatter_plot_gating <- renderPlot({
     if(is.null(gates$gated_data_subset)){return(NULL)}
-    colfunc <- grDevices::colorRampPalette(c("black", "red", "yellow"))
-    min_mk1 <- min(gates$gated_data_subset$gating_mk1)
-    max_mk1 <- max(gates$gated_data_subset$gating_mk1)
-    min_mk2 <- min(gates$gated_data_subset$gating_mk2)
-    max_mk2 <- max(gates$gated_data_subset$gating_mk2)
-    plots$scatter_plot_gating <- ggplot(gates$gated_data_subset, aes(x = gating_mk1, y = gating_mk2)) +
-      ylim((min_mk2 - 0.1*(max_mk2 - min_mk2)),
-           (max_mk2 + 0.1*(max_mk2 - min_mk2))) +
-      xlim((min_mk1 - 0.1*(max_mk1 - min_mk1)),
-           (max_mk1 + 0.1*(max_mk1 - min_mk1))) +
-      xlab(input$gating_mk1) +
-      ylab(input$gating_mk2) +
-      geom_point(size = 0.1) +
-      stat_density_2d(aes(fill = ..level..), geom = "polygon") +
-      scale_fill_gradientn(colours=colfunc(400))+
-      geom_density2d(colour="black") +
-      theme_bw() +
-      theme(legend.position = "none")
+    withProgress(message = "Density drawing", min =0, max = 3, value = 0,{
+      colfunc <- grDevices::colorRampPalette(c("black", "red", "yellow"))
+      incProgress(1, detail = "Data preparation" )
+      min_mk1 <- min(gates$gated_data_subset$gating_mk1)
+      max_mk1 <- max(gates$gated_data_subset$gating_mk1)
+      min_mk2 <- min(gates$gated_data_subset$gating_mk2)
+      max_mk2 <- max(gates$gated_data_subset$gating_mk2)
+      incProgress(1, detail = "Drawing")
+      plots$scatter_plot_gating <- ggplot(gates$gated_data_subset[gates$subset_coord,], aes(x = gating_mk1, y = gating_mk2)) +
+        ylim((min_mk2 - 0.1*(max_mk2 - min_mk2)),
+             (max_mk2 + 0.1*(max_mk2 - min_mk2))) +
+        xlim((min_mk1 - 0.1*(max_mk1 - min_mk1)),
+             (max_mk1 + 0.1*(max_mk1 - min_mk1))) +
+        xlab(input$gating_mk1) +
+        ylab(input$gating_mk2) +
+        geom_point(size = 0.1) +
+        stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+        scale_fill_gradientn(colours=colfunc(400))+
+        geom_density2d(colour="black") +
+        theme_bw() +
+        theme(legend.position = "none")
+      incProgress(1)
+    })
     return(plots$scatter_plot_gating)
   })
+
+  ##### Download gates density plot
+  output$dwn_density_gate <- downloadHandler(
+    filename = function() {
+      ext <- input$dwn_density_gate_ext
+      if(is.null(ext)){ext <- "pdf"}
+      paste("Gates_density_plot", ext, sep = ".") },
+    content = function(file) {
+      ext <- input$dwn_density_gate_ext
+      if(is.null(ext)){ext <- "pdf"}
+      ggsave(file, plot = plots$scatter_plot_gating, device = ext,
+             width = input$dwn_density_gate_width,height = input$dwn_density_gate_height,
+             units = input$dwn_density_gate_units,dpi =input$dwn_density_gate_dpi)
+    }
+  )
 
   ##### Drawing the gates overlap plot
   output$gates_overlap <- renderPlot({
     if(is.null(gates$gates)){return(NULL)}
     if(ncol(gates$gates) <= 1){return(NULL)}
-    plot_gates <- get_gates_overlap_data(gates = gates$gates)
-    plots$gate_overlap <- ggplot(plot_gates, aes(Gates, Cells, fill= value))+
-      geom_tile()+
-      scale_fill_manual(values = c("white", "black"))+
-      theme_bw()+
-      theme(legend.position = "none")+
-      theme(axis.text.x = element_text(angle = 90))
+    withProgress(message = "Gates overlap drawing", min =0, max = 3, value = 0,{
+      incProgress(1, detail = "Overlap finding")
+      plot_gates <- get_gates_overlap_data(gates = gates$gates)
+      incProgress(1, detail = "Drawing")
+      plots$gate_overlap <- ggplot(plot_gates, aes(Gates, Cells, fill= value))+
+        geom_tile()+
+        scale_fill_manual(values = c("white", "black"))+
+        theme_bw()+
+        theme(legend.position = "none")+
+        theme(axis.text.x = element_text(angle = 90))
+      incProgress(1)
+    })
     return(plots$gate_overlap)
   })
 
@@ -857,7 +874,7 @@ cytofBrowser_server <- function(input, output){
   })
 
   ########################
-  ###   Enrichements   ###
+  ###   Enrichment     ###
   ########################
 
   ##### UI to chose annotation for heatmap

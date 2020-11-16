@@ -199,6 +199,31 @@ cytofBrowserGUI <-function(){
                     )
                   ),
                   shinydashboard::box(
+                    fluidRow(
+                      column(7),
+                      column(2,
+                             dropdownButton(
+                               tags$h4("Options of plotting"),
+                               materialSwitch(inputId = 'fuse_gate', label = h4("Size fuse"), value = TRUE),
+                               icon = icon("edit"), status = "primary", tooltip = tooltipOptions(title = "plot setting")
+                             )
+                      ),
+                      column(2,
+                             dropdownButton(
+                               selectInput('dwn_density_gate_ext', label = NULL,
+                                           choices = list('pdf' = "pdf", 'jpeg' = "jpeg", 'png' = "png",
+                                                          'tiff' = "tiff", 'svg' = "svg", 'bmp' = "bmp")),
+                               downloadButton('dwn_density_gate', ""),
+                               hr(),
+                               numericInput("dwn_density_gate_width", label = h5("width"), value = 10),
+                               numericInput("dwn_density_gate_height", label = h5("height"), value = 8),
+                               selectInput("dwn_density_gate_units", label = h5("units"),
+                                           choices = list("in" = "in", "cm" = "cm", "mm" = "mm"), selected = "in"),
+                               numericInput("dwn_density_gate_dpi", label = h5("dpi"), value = 300),
+                               icon = icon("save"), status = "primary", tooltip = tooltipOptions(title = "save plot")
+                             )
+                      )
+                    ),
                     plotOutput('scatter_plot_gating', brush = "brush_gating"),
                     fluidRow(
                       column(6, textInput('new_gate_name', label = h5("Name of new gated cells"), value = "marker1+/marker2+")),
