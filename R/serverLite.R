@@ -735,13 +735,13 @@ cytofBrowser_server <- function(input, output){
 
     plt <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
       geom_point(size = input$point_size_clust)
-    if(color_mk == "clusters"){plt <- plt + scale_color_manual(values = as.character(clusters$nodes$color))}
+    if(color_mk == "clusters"){plt <- plt + scale_color_manual(values = as.character(clusters$nodes$color))+
+      guides(colour = guide_legend(override.aes = list(size=2)))}
     if(color_mk != "clusters"){plt <- plt + scale_color_gradient2(midpoint=0.5, low='blue', mid='gray', high='red')}
     plt <- plt + geom_point(data = plot_data[fcs_data$cell_ann[fcs_data$subset_coord, "clusters"] == focus_node,],
                             colour = 'black', size = (input$point_size_clust*1.5))+
       labs(color = color_mk) +
-      theme_bw()+
-      guides(colour = guide_legend(override.aes = list(size=2)))
+      theme_bw()
     plots$scatter_clust <- plt
     return(plt)
   })
