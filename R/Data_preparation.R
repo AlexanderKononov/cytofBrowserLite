@@ -106,7 +106,7 @@ get_exprs_data <- function(fcs_raw){
 #'
 get_fcs_panel <- function(fcs_raw){
   tech_patterns <-list(computational_tech = c("Time", "Event", "length","Center", "Offset", "Width", "Residual", "tSNE", "<NA>"),
-                       marker_tech = c("_BC", "BCKG", "DNA"))
+                       marker_tech = c("_BC", "BCKG", "DNA","BC1","BC2","BC3","BC4","BC5","BC6"))
   panel <- as.data.frame(flowCore::pData(flowCore::parameters(fcs_raw[[1]]))[,c("name", "desc")])
   rownames(panel) <- NULL
   panel <- panel[sapply(panel$name, function(x) !any(sapply(tech_patterns$computational_tech, function(y) grepl(y,x)))),]
