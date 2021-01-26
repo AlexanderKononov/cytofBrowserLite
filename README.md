@@ -39,6 +39,9 @@ using. P.S. Don’t judge my video skills strictly=)
 Presently you can instal the develop version of this programme:
 
 ``` r
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+    
 if (!requireNamespace("devtools", quietly = TRUE))
     install.packages("devtools")
     
