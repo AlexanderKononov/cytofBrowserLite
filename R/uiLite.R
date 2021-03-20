@@ -419,7 +419,7 @@ cytofBrowserGUI <-function(){
         ),
 
         ##################################
-        ##### First tab content      #####
+        ##### Fourth tab content     #####
         ##################################
         tabItem(tabName = 'data_annotations',
                 shinydashboard::box(
@@ -463,7 +463,7 @@ cytofBrowserGUI <-function(){
                 ),
 
         #############################
-        #### Fourth tab content #####
+        #### Fifth tab content  #####
         #############################
         tabItem(tabName = 'data_enrichments',
                 fluidRow(
@@ -561,7 +561,7 @@ cytofBrowserGUI <-function(){
         ),
 
         #############################
-        ##### Fifth tab content #####
+        ##### Sixth tab content #####
         #############################
         tabItem(tabName = 'data_crosspanel',
                 fluidRow(

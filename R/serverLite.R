@@ -110,18 +110,30 @@ cytofBrowser_server <- function(input, output){
     if(is.null(fcs_data$subset_coord)){return(NULL)}
     color_mk <- names(fcs_data$use_markers)[1]
     if(!is.null(input$mk_scatter_dp)){color_mk <- input$mk_scatter_dp}
+    if(color_mk %in% names(fcs_data$use_markers)){color_mk <- fcs_data$use_markers[color_mk]}
     if(data_prep_settings$method == "tSNE"){
       plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "tSNE1"],
                               Y = fcs_data$cell_ann[fcs_data$subset_coord, "tSNE2"])}
     if(data_prep_settings$method == "UMAP"){
       plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP1"],
                               Y = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP2"])}
-    plot_data$mk <- fcs_data$exprs_data[fcs_data$subset_coord, fcs_data$use_markers[color_mk]]
-    plots$scatter_dp <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
-      geom_point(size = input$point_size) +
-      scale_color_gradient2(midpoint = 0.5, low = 'blue', mid = "gray",  high = 'red') +
+
+
+    if(color_mk %in% colnames(fcs_data$cell_ann)){plot_data$mk <- as.factor(fcs_data$cell_ann[fcs_data$subset_coord, color_mk])}
+    if(color_mk %in% colnames(fcs_data$exprs_data)){plot_data$mk <- fcs_data$exprs_data[fcs_data$subset_coord, color_mk]}
+
+    plt <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
+      geom_point(size = input$point_size)
+    if(color_mk %in% colnames(fcs_data$cell_ann)){plt <- plt +
+      #scale_color_manual(values = as.character(clusters$nodes$color))+
+      guides(colour = guide_legend(override.aes = list(size=2)))}
+    if(color_mk %in% colnames(fcs_data$exprs_data)){plt <- plt + scale_color_gradient2(midpoint=0.5, low='blue', mid='gray', high='red')}
+    plt <- plt +
       labs(color = color_mk) +
       theme_bw()
+    plots$scatter_dp <- plt
+
+
     return(plots$scatter_dp)
   })
 
@@ -276,8 +288,16 @@ cytofBrowser_server <- function(input, output){
   ##### UI to choose marker for scatter plot dp
   output$mk_scatter_dp_ui <- renderUI({
     if(is.null(fcs_data$use_markers)){return(NULL)}
+    choices_set <- names(fcs_data$use_markers)
+    if(!is.null(fcs_data$cell_ann)){
+      choices_set <- c(colnames(fcs_data$cell_ann), choices_set)
+      choices_set <- choices_set[!grepl("tSNE", choices_set)]
+      choices_set <- choices_set[!grepl("UMAP", choices_set)]
+      choices_set <- choices_set[!grepl("all_cells", choices_set)]
+    }
+    selected_1 <- names(fcs_data$use_markers)[1]
     selectInput('mk_scatter_dp', label = h4("Plotted marker"),
-                choices = names(fcs_data$use_markers), selected = 1)
+                choices = choices_set, selected = selected_1)
   })
 
 
@@ -693,8 +713,14 @@ cytofBrowser_server <- function(input, output){
   ##### UI to choose marker for scatter plot with clusters
   output$mk_scatter_clust_ui <- renderUI({
     if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
+    ann_groups <- colnames(fcs_data$cell_ann)
+    ann_groups <- ann_groups[!grepl("tSNE", ann_groups)]
+    ann_groups <- ann_groups[!grepl("UMAP", ann_groups)]
+    ann_groups <- ann_groups[!grepl("all_cells", ann_groups)]
+    selected_1 <- 1
+    if("clusters" %in% ann_groups){selected_1 <- "clusters"}
     selectInput("mk_target_clusters", label = h5("Plotted marker"),
-                choices = c("clusters", names(fcs_data$use_markers)),selected = 1)
+                choices = c(ann_groups, names(fcs_data$use_markers)),selected = selected_1)
   })
 
   ##### UI for advanced options for clustering page
@@ -717,7 +743,6 @@ cytofBrowser_server <- function(input, output){
 
   ##### Drawing the reactive and interactive UMAP plot
   output$scatter_plot_clust <- renderPlot({
-
     if(is.null(fcs_data$cell_ann$clusters)){return(NULL)}
     if(is.null(fcs_data$subset_coord)){return(NULL)}
     color_mk <- "clusters"
@@ -729,15 +754,14 @@ cytofBrowser_server <- function(input, output){
     if(data_prep_settings$method == "UMAP"){
       plot_data <- data.frame(X = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP1"],
                               Y = fcs_data$cell_ann[fcs_data$subset_coord, "UMAP2"])}
-    if(color_mk == "clusters"){plot_data$mk <- as.factor(fcs_data$cell_ann[fcs_data$subset_coord, "clusters"])}
-    if(color_mk != "clusters"){plot_data$mk <- fcs_data$exprs_data[fcs_data$subset_coord, color_mk]}
+    if(color_mk %in% colnames(fcs_data$cell_ann)){plot_data$mk <- as.factor(fcs_data$cell_ann[fcs_data$subset_coord, color_mk])}
+    if(color_mk %in% colnames(fcs_data$exprs_data)){plot_data$mk <- fcs_data$exprs_data[fcs_data$subset_coord, color_mk]}
     focus_node <- input$current_node_id
-
     plt <- ggplot2::ggplot(plot_data,  aes(x = X, y = Y, color = mk)) +
       geom_point(size = input$point_size_clust)
-    if(color_mk == "clusters"){plt <- plt + scale_color_manual(values = as.character(clusters$nodes$color))+
+    if(color_mk %in% colnames(fcs_data$cell_ann)){plt <- plt + scale_color_manual(values = as.character(clusters$nodes$color))+
       guides(colour = guide_legend(override.aes = list(size=2)))}
-    if(color_mk != "clusters"){plt <- plt + scale_color_gradient2(midpoint=0.5, low='blue', mid='gray', high='red')}
+    if(color_mk %in% colnames(fcs_data$exprs_data)){plt <- plt + scale_color_gradient2(midpoint=0.5, low='blue', mid='gray', high='red')}
     plt <- plt + geom_point(data = plot_data[fcs_data$cell_ann[fcs_data$subset_coord, "clusters"] == focus_node,],
                             colour = 'black', size = (input$point_size_clust*1.5))+
       labs(color = color_mk) +
