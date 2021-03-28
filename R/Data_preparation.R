@@ -203,13 +203,44 @@ get_extr_transformations <- function(exprs_data, use_markers, mode = "dataset"){
     mean_values <- mean(mean_values)
   }
   if((max_values > 100) & (min_values >= 0)){return(trans)}
-  if((min_values >= 0) & (mean_values > 0) & (mean_values < 2)){trans <- c(trans, "log-like")}
+  if((min_values >= 0) & (mean_values > 0) & (mean_values < 6)){trans <- c(trans, "log-like")}
   if((max_values <= 1) & (min_values >= 0)){trans <- c(trans, "normalised")}
   if((min_values <= 0) & (max_values <= 20)){trans <- c(trans, "z-score")}
   return(trans)
 }
 
 
+
+#' CytofAsinh fron cytofkit articles
+#'
+#' @param value value or vector to transform
+#' @param cofactor number to divide
+#'
+#' @return
+cytofAsinh <- function(value, cofactor = 5) {
+  value <- value-1
+  loID <- which(value < 0)
+  if(length(loID) > 0)
+    value[loID] <- rnorm(length(loID), mean = 0, sd = 0.01)
+  value <- value / cofactor
+  value <- asinh(value)
+  return(value)
+}
+
+#' cytofLog10 from cytofkit articles
+#'
+#' @param value value or vector to transform
+#'
+#' @return
+cytofLog10 <- function(value) {
+  value <- value-1
+  loID <- which(value < 0)
+  if(length(loID) > 0)
+    value[loID] <- rnorm(length(loID), mean = 0, sd = 0.01)
+  value <- value / cofactor
+  value <- log10(value)
+  return(value)
+}
 
 #' Transformation exprs matrix by asinh fransformation
 #'
@@ -284,6 +315,10 @@ get_transformations <- function(trans_to_do, exprs_data, use_markers,
     exprs_data <- exprs_outlier_squeezing(exprs_data, use_markers, quantile = quantile)}
   if("z-score" %in% trans_to_do){
     exprs_data[,use_markers] <- apply(exprs_data[,use_markers], 2, scale)}
+  if("cytofLog10" %in% trans_to_do){
+    exprs_data[,use_markers] <- apply(exprs_data[,use_markers], 2, cytofLog10)}
+  if("cytofAsinh" %in% trans_to_do){
+    exprs_data[,use_markers] <- apply(exprs_data[,use_markers], 2, cytofAsinh)}
   return(exprs_data)
 }
 

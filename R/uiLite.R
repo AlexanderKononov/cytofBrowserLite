@@ -54,7 +54,12 @@ cytofBrowserGUI <-function(){
                                     verbatimTextOutput('trans_dp'),
                                     hr(),
                                     checkboxGroupInput("transformation_list", label = h4("Transformations"),
-                                                       choices = list("asinh" = 'asinh', "outlier squeezing" = 'outlier_squeezing'),
+                                                       choices = list("asinh" = 'asinh',
+                                                                      "log-transfomation" = 'log',
+                                                                      "z-score" = 'z-score',
+                                                                      "cytofAsinh" = 'cytofAsinh',
+                                                                      "cytofLog10" = 'cytofLog10',
+                                                                      "outlier squeezing" = 'outlier_squeezing'),
                                                        selected = c("asinh")),
                                     conditionalPanel(
                                       condition = "input.transformation_list.includes('asinh')",
