@@ -418,10 +418,11 @@ cytofBrowser_server <- function(input, output){
       column(1),
       column(10,
              h4("Convert gates to cell annotation"),
-             selectInput("gate_converting_method", label = h5("converting method"),
+             selectInput("gate_converting_method", label = h5("Converting method"),
                          choices = list("Pure selection" = 'pure', "Gates squeezing" = 'squeeze'),selected = 1),
-             selectInput("gates_to_convert_gating", label = h5("Choose gates"),
+             selectInput("gates_to_convert_gating", label = h5("Gates to convert"),
                          choices = gates$antology$name[-1], multiple = TRUE),
+             textInput("gates_name_new_ann", label = h5("New annotation name"),value = NULL, placeholder = "annotation_from_gates"),
              actionButton("convert_gates", label = "Convert")
       )
     )
@@ -451,14 +452,24 @@ cytofBrowser_server <- function(input, output){
     if(is.null(input$gating_mk2)){return(NULL)}
     withProgress(message = "Making of subset data", min =0, max = 3, value = 0,{
       incProgress(1)
+      print(head(gates$gates))
+      print("===1===")
       gates$gated_data_subset <- get_exprs_data_for_gating(exprs_data = fcs_data$exprs_data,
                                                      gating_subset = gates$gates[,input$gating_subset],
                                                      gating_mk1 = fcs_data$entire_panel[input$gating_mk1],
                                                      gating_mk2 = fcs_data$entire_panel[input$gating_mk2])
+      print(str(gates$gated_data_subset))
+      print("===2===")
       incProgress(1)
       gates$gated_data_subset <- get_modif_sparse_data_gating(gates$gated_data_subset)
+      print(str(gates$gated_data_subset))
+      print("===3===")
       gates$subset_coord <- c(1:nrow(gates$gated_data_subset))
+      print(str(gates$subset_coord))
+      print("===4===")
       if(input$fuse_gate){gates$subset_coord <- get_size_subset_gating_data(gates$gated_data_subset)}
+      print(str(gates$subset_coord))
+      print("===5===")
       incProgress(1)
     })
   })
@@ -589,24 +600,36 @@ cytofBrowser_server <- function(input, output){
   observeEvent(input$gete_chosen_cells, {
     if(is.null(input$brush_gating)){return(NULL)}
     if(is.null(gates$gated_data_subset)){return(NULL)}
+    print("---1---")
     new_name <- paste0("Gate", as.character(ncol(gates$gates)+1), "_",
                        input$gating_mk1, "_", input$gating_mk2, "_from_", strsplit(input$gating_subset, "_")[[1]][1])
+    print("---2---")
     if(!is.null(input$new_gate_name) & (input$new_gate_name != "marker1+/marker2+")){new_name <- input$new_gate_name}
+    print("---3---")
     original_cell_coordinates <- brushedPoints(gates$gated_data_subset, input$brush_gating, xvar = "gating_mk1", yvar = "gating_mk2")
+    print("---4---")
     original_cell_coordinates <- original_cell_coordinates$original_cell_coordinates
+    print("---5---")
     gates$gates$new_gate <- FALSE
+    print("---6---")
     gates$gates[original_cell_coordinates, "new_gate"] <- TRUE
+    print("---7---")
     if(any(grepl(new_name, colnames(gates$gates)))){new_name <- paste0(new_name,"_",sum(grepl(new_name, colnames(gates$gates)))+1)}
+    print("---8---")
     colnames(gates$gates)[which(colnames(gates$gates) ==  "new_gate")] <- new_name
+    print("---9---")
     ## Add anthology note of gating for graph
     gates$antology <- rbind(gates$antology, data.frame(name = new_name, parent = input$gating_subset))
+    print("---10---")
     rownames(gates$antology) <- gates$antology$name
   })
 
   ##### Converting gates to cell annotation data
   observeEvent(input$convert_gates, {
+    if(is.null(input$gate_converting_method)){return(NULL)}
     fcs_data$cell_ann <- get_cell_type_from_gates(gates$gates, input$gates_to_convert_gating,
-                                            fcs_data$cell_ann, method = input$gate_converting_method)
+                                            fcs_data$cell_ann, method = input$gate_converting_method,
+                                            name_new_ann = input$gates_name_new_ann)
   })
 
   ##### Renew gate reactive object after gate rename

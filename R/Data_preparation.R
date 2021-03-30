@@ -220,8 +220,9 @@ get_extr_transformations <- function(exprs_data, use_markers, mode = "dataset"){
 cytofAsinh <- function(value, cofactor = 5) {
   value <- value-1
   loID <- which(value < 0)
-  if(length(loID) > 0)
-    value[loID] <- rnorm(length(loID), mean = 0, sd = 0.01)
+  if(length(loID) > 0){
+    value[loID] <- abs(rnorm(length(loID), mean = 0, sd = 0.01))
+  }
   value <- value / cofactor
   value <- asinh(value)
   return(value)
@@ -233,11 +234,11 @@ cytofAsinh <- function(value, cofactor = 5) {
 #'
 #' @return
 cytofLog10 <- function(value) {
-  value <- value-1
+  value <- value+1
   loID <- which(value < 0)
-  if(length(loID) > 0)
-    value[loID] <- rnorm(length(loID), mean = 0, sd = 0.01)
-  value <- value / cofactor
+  if(length(loID) > 0){
+    value[loID] <- abs(rnorm(length(loID), mean = 0, sd = 0.01))
+  }
   value <- log10(value)
   return(value)
 }
