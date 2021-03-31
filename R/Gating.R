@@ -124,7 +124,9 @@ get_cell_type_from_gates <- function(gates, gate_list, cell_annotation, method =
   new_cell_annotation$new_gate <- populations
   if(any(grepl(new_name, colnames(new_cell_annotation)))){
     new_name <- paste0(new_name,"_",sum(grepl(new_name, colnames(new_cell_annotation)))+1)}
-  if(!is.null(name_new_ann)){new_name <- name_new_ann}
+  if(!is.null(name_new_ann) & name_new_ann != ""){new_name <- name_new_ann}
+  print("new ann_ name=================")
+  print(new_name)
   colnames(new_cell_annotation)[colnames(new_cell_annotation) == "new_gate"] <- new_name
   return(new_cell_annotation)
 }

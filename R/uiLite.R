@@ -201,6 +201,9 @@ cytofBrowserGUI <-function(){
                              uiOutput("mergeing_gates_ui"),
                              hr(),
                              uiOutput("rename_gates_ui")
+                    ),
+                    tabPanel("Gate subseting",
+                             uiOutput("subset_gates_ui")
                     )
                   ),
                   shinydashboard::box(

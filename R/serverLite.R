@@ -142,27 +142,45 @@ cytofBrowser_server <- function(input, output){
   observeEvent(input$redraw_dp, {
     withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
       incProgress(1, detail = "Subsampling" )
+      print("--Repeat sabsampling--")
       ## If subset was changed
       if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size, input$fuse))){
+        print("===1===")
         if(!is.null(input$sampling_size)){data_prep_settings$sampling_size <- input$sampling_size}
+        print("===2===")
         if(!is.null(input$fuse)){data_prep_settings$fuse <- input$fuse}
+        print("===3===")
         fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
                                                   sampling_size = data_prep_settings$sampling_size,
                                                   fuse = data_prep_settings$fuse,
                                                   size_fuse = data_prep_settings$size_fuse)
+        print("===4===")
       }
       ## Repeat dimension reducing
+      print("--Repeat dim redicing--")
       incProgress(1, detail = "Dimention redicing" )
       dim_reduce_force <- FALSE
       if(!is.null(input$method_plot_dp)){data_prep_settings$method <- input$method_plot_dp; dim_reduce_force <- TRUE}
+      print("===5===")
       if(!is.null(input$data_prep_perplexity)){data_prep_settings$perplexity <- input$data_prep_perplexity; dim_reduce_force <- TRUE}
+      print("===6===")
       if(!is.null(input$data_prep_theta)){data_prep_settings$theta <- input$data_prep_theta; dim_reduce_force <- TRUE}
+      print("===7===")
       if(!is.null(input$data_prep_max_iter)){data_prep_settings$max_iter <- input$data_prep_max_iter; dim_reduce_force <- TRUE}
+      print("===8===")
+      print(dim(fcs_data$exprs_data))
+      print(fcs_data$exprs_data[1:50,])
+      print(dim(fcs_data$cell_ann))
+      print(length(fcs_data$subset_coord))
+      print(fcs_data$subset_coord)
+      print(data_prep_settings$perplexity)
       fcs_data$cell_ann <- get_dim_reduce(fcs_data$exprs_data, fcs_data$cell_ann,
                                           fcs_data$subset_coord, fcs_data$use_markers,force = dim_reduce_force,
                                           method = data_prep_settings$method, perplexity = data_prep_settings$perplexity,
                                           theta = data_prep_settings$theta, max_iter = data_prep_settings$max_iter,
                                           pca_param = FALSE, check_duplicates = FALSE, seed = 1234)
+      print("===9===")
+      print(head(fcs_data$cell_ann))
       incProgress(1, detail = "Plotting" )
     })
   })
@@ -432,15 +450,69 @@ cytofBrowser_server <- function(input, output){
   ##### Create UI to rename gates
   output$rename_gates_ui <- renderUI({
     if(is.null(input$gated_node_id)){return(NULL)}
+    ui <- fluidRow(
+      fluidRow(
+        column(1),
+        column(10,
+               h4("Rename gate"),
+               textInput('new_gate_name_gating', label = h5("Write new name"),
+                         value = as.character(input$gated_node_id)),
+               actionButton("rename_gates", label = "Rename")
+        )
+      ),
+      fluidRow(
+        column(1),
+        column(6, h5(paste0("Delete gate ", input$gated_node_id))),
+        column(4, actionButton("delete_gate", label = "Delete"))
+      )
+    )
+    return(ui)
+  })
+
+
+  ### UI for make subset by gates
+  output$subset_gates_ui <- renderUI({
     fluidRow(
       column(1),
       column(10,
-             h4("Rename gates"),
-             textInput('new_gate_name_gating', label = h5("Write new name"),
-                       value = as.character(input$gated_node_id)),
-             actionButton("rename_gates", label = "Rename")
+             radioGroupButtons(inputId = "gates_subseting_orient", label = h5("Subsatting by gates"),
+                               choices = c("exclude", "include"), selected = "exclude", justified = TRUE),
+             selectInput("gates_to_subseting", label = h5("Gates to use "),
+                         choices = gates$antology$name[-1], multiple = TRUE),
+             actionButton("butt_subset_gating", label = "Subset")
       )
     )
+  })
+
+  observeEvent(input$butt_subset_gating,{
+    if(is.null(gates$gates)){return(NULL)}
+    if(is.null(input$gates_to_subseting)){return(NULL)}
+    print("----START subsampling----")
+    if(length(input$gates_to_subseting) == 1){stay_coord <- gates$gates[,input$gates_to_subseting]}
+    if(length(input$gates_to_subseting) > 1){stay_coord <- apply(gates$gates[,input$gates_to_subseting], 1, any)}
+    print(head(gates$gates[,input$gates_to_subseting]))
+    print(stay_coord)
+    print(dim(fcs_data$exprs_data))
+    print(dim(fcs_data$cell_ann))
+    print(dim(gates$gates))
+    print(head(fcs_data$subset_coord))
+    print(head(gates$subset_coord))
+    if(input$gates_subseting_orient == "exclude"){stay_coord <- !stay_coord}
+
+
+
+    fcs_data$exprs_data <- fcs_data$exprs_data[stay_coord,]
+    fcs_data$cell_ann <- fcs_data$cell_ann[stay_coord,]
+    gates$gates <- gates$gates[stay_coord,]
+    fcs_data$subset_coord <- which(stay_coord[as.integer(fcs_data$subset_coord)])
+    gates$subset_coord <- which(stay_coord[gates$subset_coord])
+
+    print("did subsatting")
+    print(dim(fcs_data$exprs_data))
+    print(dim(fcs_data$cell_ann))
+    print(dim(gates$gates))
+    print(head(fcs_data$subset_coord))
+    print(head(gates$subset_coord))
   })
 
 
@@ -452,24 +524,14 @@ cytofBrowser_server <- function(input, output){
     if(is.null(input$gating_mk2)){return(NULL)}
     withProgress(message = "Making of subset data", min =0, max = 3, value = 0,{
       incProgress(1)
-      print(head(gates$gates))
-      print("===1===")
       gates$gated_data_subset <- get_exprs_data_for_gating(exprs_data = fcs_data$exprs_data,
                                                      gating_subset = gates$gates[,input$gating_subset],
                                                      gating_mk1 = fcs_data$entire_panel[input$gating_mk1],
                                                      gating_mk2 = fcs_data$entire_panel[input$gating_mk2])
-      print(str(gates$gated_data_subset))
-      print("===2===")
       incProgress(1)
       gates$gated_data_subset <- get_modif_sparse_data_gating(gates$gated_data_subset)
-      print(str(gates$gated_data_subset))
-      print("===3===")
       gates$subset_coord <- c(1:nrow(gates$gated_data_subset))
-      print(str(gates$subset_coord))
-      print("===4===")
       if(input$fuse_gate){gates$subset_coord <- get_size_subset_gating_data(gates$gated_data_subset)}
-      print(str(gates$subset_coord))
-      print("===5===")
       incProgress(1)
     })
   })
@@ -600,27 +662,17 @@ cytofBrowser_server <- function(input, output){
   observeEvent(input$gete_chosen_cells, {
     if(is.null(input$brush_gating)){return(NULL)}
     if(is.null(gates$gated_data_subset)){return(NULL)}
-    print("---1---")
     new_name <- paste0("Gate", as.character(ncol(gates$gates)+1), "_",
                        input$gating_mk1, "_", input$gating_mk2, "_from_", strsplit(input$gating_subset, "_")[[1]][1])
-    print("---2---")
     if(!is.null(input$new_gate_name) & (input$new_gate_name != "marker1+/marker2+")){new_name <- input$new_gate_name}
-    print("---3---")
     original_cell_coordinates <- brushedPoints(gates$gated_data_subset, input$brush_gating, xvar = "gating_mk1", yvar = "gating_mk2")
-    print("---4---")
     original_cell_coordinates <- original_cell_coordinates$original_cell_coordinates
-    print("---5---")
     gates$gates$new_gate <- FALSE
-    print("---6---")
     gates$gates[original_cell_coordinates, "new_gate"] <- TRUE
-    print("---7---")
     if(any(grepl(new_name, colnames(gates$gates)))){new_name <- paste0(new_name,"_",sum(grepl(new_name, colnames(gates$gates)))+1)}
-    print("---8---")
     colnames(gates$gates)[which(colnames(gates$gates) ==  "new_gate")] <- new_name
-    print("---9---")
     ## Add anthology note of gating for graph
     gates$antology <- rbind(gates$antology, data.frame(name = new_name, parent = input$gating_subset))
-    print("---10---")
     rownames(gates$antology) <- gates$antology$name
   })
 
@@ -640,6 +692,14 @@ cytofBrowser_server <- function(input, output){
     gates$antology$parent[gates$antology$parent == input$gated_node_id] <- input$new_gate_name_gating
     rownames(gates$antology) <- gates$antology$name
     colnames(gates$gates)[colnames(gates$gates) == input$gated_node_id] <- input$new_gate_name_gating
+  })
+
+  ##### Delete gate from gate reactive object
+  observeEvent(input$delete_gate, {
+    if(is.null(input$gated_node_id)){return(NULL)}
+    gates$antology$parent[gates$antology$parent == input$gated_node_id] <- gates$antology[input$gated_node_id, "parent"]
+    gates$antology <- gates$antology[rownames(gates$antology) != input$gated_node_id,]
+    gates$gates[,colnames(gates$gates) == input$gated_node_id] <- NULL
   })
 
   ########################
