@@ -721,7 +721,7 @@ cytofBrowser_server <- function(input, output){
       clusters$clust_markers <- fcs_data$use_markers[!(names(fcs_data$use_markers) %in% input$exclude_mk_clusters)]
       if(input$mode_k_choice == 1){k <- input$maxK}
       if(input$mode_k_choice == 2){k <- input$k}
-      som <- get_som(fcs_data$fcs_raw, clusters$clust_markers, seed = 1234)
+      som <- get_som(fcs_data$exprs_data , fcs_data$fcs_raw, clusters$clust_markers, seed = 1234)
       incProgress(1, detail = "clustering")
       mc <- get_consensusClust(som, maxK = k, seed = 1234)
       incProgress(1, detail = "extration of cluster set")

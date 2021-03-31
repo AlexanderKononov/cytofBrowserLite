@@ -1,6 +1,6 @@
 
-##### Get som object from flowSOM
-#' Get som object from flowSOM
+##### Get som object from flowSOM by raw data from fcs files
+#' Get som object from flowSOM by raw data from fcs files
 #'
 #' @param fcs_raw fcs object
 #' @param use_markers vector  of markers to clustering
@@ -9,8 +9,39 @@
 #' @importFrom FlowSOM ReadInput
 #' @importFrom FlowSOM BuildSOM
 #'
-get_som <- function(fcs_raw, clust_markers, seed = 1234){
+get_som_from_row_data <- function(fcs_raw, clust_markers, seed = 1234){
   fsom <- FlowSOM::ReadInput(fcs_raw, transform = FALSE, scale = FALSE)
+  set.seed(seed)
+  som <- FlowSOM::BuildSOM(fsom, colsToUse = clust_markers)
+  return(som)
+}
+
+##### Get som object from flowSOM by exprs_data
+#' Get som object from flowSOM by expresion data
+#'
+#' @param exprs_data fcs object
+#' @param use_markers vector  of markers to clustering
+#'
+#' @return som object from FlowSOM package
+#' @importFrom flowCore exprs exprs<-
+#' @importFrom FlowSOM ReadInput
+#' @importFrom FlowSOM BuildSOM
+#'
+get_som <- function(exprs_data, fcs_raw, clust_markers, seed = 1234){
+
+  print("---print from get_som function--------------------------")
+  print("---1---")
+  print(fcs_raw)
+  print(str(fcs_raw))
+  new_fcs <- fcs_raw[[1]]
+  print(str(new_fcs))
+  print("---2---")
+  flowCore::exprs(new_fcs)<- exprs_data
+  print("---3---")
+  print("---new new_fcs ------")
+  print(str(new_fcs))
+  fsom <- FlowSOM::ReadInput(new_fcs, transform = FALSE, scale = FALSE)
+  print("---4---")
   set.seed(seed)
   som <- FlowSOM::BuildSOM(fsom, colsToUse = clust_markers)
   return(som)
@@ -18,6 +49,8 @@ get_som <- function(fcs_raw, clust_markers, seed = 1234){
 
 ### test
 #som <- get_som(fcs_raw, use_markers)
+
+
 
 ##### Get mc consensusCluster object from ConsensusClusterPlus
 #' Get mc consensusCluster object from ConsensusClusterPlus
