@@ -4,7 +4,13 @@
 \alias{get_cell_type_from_gates}
 \title{Function adds set of gates to cell annotation object}
 \usage{
-get_cell_type_from_gates(gates, gate_list, cell_annotation, method = "pure")
+get_cell_type_from_gates(
+  gates,
+  gate_list,
+  cell_annotation,
+  method = "pure",
+  name_new_ann = NULL
+)
 }
 \arguments{
 \item{gates}{data frame with allocated gates with logical values in it}

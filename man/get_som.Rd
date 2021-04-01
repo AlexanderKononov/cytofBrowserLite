@@ -2,12 +2,12 @@
 % Please edit documentation in R/Clustering.R
 \name{get_som}
 \alias{get_som}
-\title{Get som object from flowSOM}
+\title{Get som object from flowSOM by expresion data}
 \usage{
-get_som(fcs_raw, clust_markers, seed = 1234)
+get_som(exprs_data, fcs_raw, clust_markers, seed = 1234)
 }
 \arguments{
-\item{fcs_raw}{fcs object}
+\item{exprs_data}{fcs object}
 
 \item{use_markers}{vector  of markers to clustering}
 }
@@ -15,5 +15,5 @@ get_som(fcs_raw, clust_markers, seed = 1234)
 som object from FlowSOM package
 }
 \description{
-Get som object from flowSOM
+Get som object from flowSOM by expresion data
 }
