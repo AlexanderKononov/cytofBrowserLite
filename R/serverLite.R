@@ -132,8 +132,6 @@ cytofBrowser_server <- function(input, output){
       labs(color = color_mk) +
       theme_bw()
     plots$scatter_dp <- plt
-
-
     return(plots$scatter_dp)
   })
 
@@ -323,7 +321,11 @@ cytofBrowser_server <- function(input, output){
     print("---5")
     fcs_data$subset_coord <- which(stay_coord[as.integer(fcs_data$subset_coord)])
     print("---6")
-    if(!is.null(gates$gates)){gates$gates <- as.data.frame(gates$gates)[stay_coord,]}
+    if(!is.null(gates$gates)){
+      new_gates <- as.data.frame(as.data.frame(gates$gates)[stay_coord,])
+      colnames(new_gates) <- colnames(gates$gates)
+      gates$gates <- as.data.frame(new_gates)
+      }
     print("---7")
     if(!is.null(gates$subset_coord)){gates$subset_coord <- which(stay_coord[gates$subset_coord])}
     print("---7")
@@ -902,14 +904,14 @@ cytofBrowser_server <- function(input, output){
     withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
       incProgress(1, detail = "Subsampling" )
       ## If subset was changed
-      if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size_clust, input$fuse_clust))){
-        if(!is.null(input$sampling_size_clust)){data_prep_settings$sampling_size <- input$sampling_size_clust}
-        if(!is.null(input$fuse_clust)){data_prep_settings$fuse <- input$fuse_clust}
-        fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
-                                                  sampling_size = data_prep_settings$sampling_size,
-                                                  fuse = data_prep_settings$fuse,
-                                                  size_fuse = data_prep_settings$size_fuse)
-      }
+      #if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size_clust, input$fuse_clust))){
+      #}
+      if(!is.null(input$sampling_size_clust)){data_prep_settings$sampling_size <- input$sampling_size_clust}
+      if(!is.null(input$fuse_clust)){data_prep_settings$fuse <- input$fuse_clust}
+      fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
+                                                sampling_size = data_prep_settings$sampling_size,
+                                                fuse = data_prep_settings$fuse,
+                                                size_fuse = data_prep_settings$size_fuse)
       ## Repeat dimension reducing
       incProgress(1, detail = "Dimention redicing" )
       dim_reduce_force <- FALSE
