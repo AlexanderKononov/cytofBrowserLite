@@ -31,7 +31,7 @@ cytofBrowserGUI <-function(){
         shinydashboard::tabItem(tabName = 'data_processing',
                 shiny::fluidRow(
                   shinydashboard::tabBox(
-                    shiny::tabPanel("Uploading",
+                    shiny::tabPanel("Upload",
                                     uiOutput('selected_fcs_dp_ui'),
                                     fluidRow(
                                       column(1),
@@ -49,7 +49,7 @@ cytofBrowserGUI <-function(){
                                     materialSwitch(inputId = 'extr_ann_dp', label = h5("Extract annotations"), value = TRUE)
 
                     ),
-                    shiny::tabPanel("Transforming",
+                    shiny::tabPanel("Transform",
                                     h4("Implemented transformations"),
                                     verbatimTextOutput('trans_dp'),
                                     hr(),
@@ -75,6 +75,10 @@ cytofBrowserGUI <-function(){
                     shiny::tabPanel("Markers",
                                     uiOutput('mk_subset_dp_ui'),
                                     uiOutput('extr_ann_manage_dp_ui')
+                    ),
+                    shiny::tabPanel("Subset",
+                                    uiOutput("subset_dp_1ui"),
+                                    uiOutput("subset_dp_2ui")
                     ),
                     shiny::tabPanel("Save",
                                     h5("Saving the data as FCS files "),

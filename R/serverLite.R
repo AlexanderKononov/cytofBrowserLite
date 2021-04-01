@@ -140,22 +140,26 @@ cytofBrowser_server <- function(input, output){
 
   ##### Rewrite for scatter plot
   observeEvent(input$redraw_dp, {
+    print(input$redraw_dp)
+    print(str(input$redraw_dp))
+
     withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
       incProgress(1, detail = "Subsampling" )
       print("--Repeat sabsampling--")
       ## If subset was changed
-      if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size, input$fuse))){
-        print("===1===")
-        if(!is.null(input$sampling_size)){data_prep_settings$sampling_size <- input$sampling_size}
-        print("===2===")
-        if(!is.null(input$fuse)){data_prep_settings$fuse <- input$fuse}
-        print("===3===")
-        fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
-                                                  sampling_size = data_prep_settings$sampling_size,
-                                                  fuse = data_prep_settings$fuse,
-                                                  size_fuse = data_prep_settings$size_fuse)
-        print("===4===")
-      }
+      #if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size, input$fuse))){
+      #}
+      print("===1===")
+      if(!is.null(input$sampling_size)){data_prep_settings$sampling_size <- input$sampling_size}
+      print("===2===")
+      if(!is.null(input$fuse)){data_prep_settings$fuse <- input$fuse}
+      print("===3===")
+      print(head(fcs_data$cell_ann))
+      fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
+                                                sampling_size = data_prep_settings$sampling_size,
+                                                fuse = data_prep_settings$fuse,
+                                                size_fuse = data_prep_settings$size_fuse)
+      print("===4===")
       ## Repeat dimension reducing
       print("--Repeat dim redicing--")
       incProgress(1, detail = "Dimention redicing" )
@@ -167,13 +171,10 @@ cytofBrowser_server <- function(input, output){
       if(!is.null(input$data_prep_theta)){data_prep_settings$theta <- input$data_prep_theta; dim_reduce_force <- TRUE}
       print("===7===")
       if(!is.null(input$data_prep_max_iter)){data_prep_settings$max_iter <- input$data_prep_max_iter; dim_reduce_force <- TRUE}
-      print("===8===")
-      print(dim(fcs_data$exprs_data))
-      print(fcs_data$exprs_data[1:50,])
-      print(dim(fcs_data$cell_ann))
-      print(length(fcs_data$subset_coord))
-      print(fcs_data$subset_coord)
-      print(data_prep_settings$perplexity)
+      print(head(fcs_data$exprs_data))
+      print(head(fcs_data$cell_ann))
+      print(head(fcs_data$cell_ann))
+      print(str(fcs_data$cell_ann))
       fcs_data$cell_ann <- get_dim_reduce(fcs_data$exprs_data, fcs_data$cell_ann,
                                           fcs_data$subset_coord, fcs_data$use_markers,force = dim_reduce_force,
                                           method = data_prep_settings$method, perplexity = data_prep_settings$perplexity,
@@ -267,6 +268,66 @@ cytofBrowser_server <- function(input, output){
                 choices = colnames(fcs_data$cell_ann), multiple = TRUE)
   })
 
+  ##### First part of UI for subsetting data by annotation
+  output$subset_dp_1ui <- renderUI({
+    if(is.null(fcs_data$cell_ann)){return(NULL)}
+    print(head(fcs_data$cell_ann))
+    print(str(fcs_data$cell_ann))
+    choices_set <- colnames(fcs_data$cell_ann)
+    choices_set <- choices_set[!grepl("tSNE", choices_set)]
+    choices_set <- choices_set[!grepl("UMAP", choices_set)]
+    choices_set <- choices_set[!grepl("all_cells", choices_set)]
+    if(length(choices_set) == 0){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             radioGroupButtons(inputId = "subset_orient_dp", label = h5("Subsatting by annotaion"),
+                               choices = c("exclude", "include"), selected = "exclude", justified = TRUE),
+             selectInput("ann_to_subset", label = h5("Annotation to use "),
+                         choices = choices_set,  multiple = FALSE)
+      )
+    )
+  })
+
+  ##### Second part of UI for subsetting data by annotation
+  output$subset_dp_2ui <- renderUI({
+    if(is.null(fcs_data$cell_ann)){return(NULL)}
+    if(is.null(input$ann_to_subset)){return(NULL)}
+    fluidRow(
+      column(1),
+      column(10,
+             selectInput("ann_groups_to_subset", label = h5("Cell groups to use"),
+                         choices = unique(fcs_data$cell_ann[,input$ann_to_subset]), multiple = TRUE),
+             actionButton("butt_subset_dp", label = "Subset")
+      )
+    )
+  })
+
+  ### Subsatting data by annotation
+  observeEvent(input$butt_subset_dp, {
+    if(is.null(fcs_data$cell_ann)){return(NULL)}
+    if(is.null(input$ann_to_subset)){return(NULL)}
+    if(is.null(input$ann_groups_to_subset)){return(NULL)}
+    print("----Start subsetting-----")
+    print(input$redraw_dp)
+    print(str(input$redraw_dp))
+
+    print("---1")
+    stay_coord <- fcs_data$cell_ann[,input$ann_to_subset] %in% input$ann_groups_to_subset
+    print("---2")
+    if(input$subset_orient_dp == "exclude"){stay_coord <- !stay_coord}
+    print("---3")
+    fcs_data$exprs_data <- fcs_data$exprs_data[stay_coord,]
+    print("---4")
+    fcs_data$cell_ann <- fcs_data$cell_ann[stay_coord,]
+    print("---5")
+    fcs_data$subset_coord <- which(stay_coord[as.integer(fcs_data$subset_coord)])
+    print("---6")
+    if(!is.null(gates$gates)){gates$gates <- as.data.frame(gates$gates)[stay_coord,]}
+    print("---7")
+    if(!is.null(gates$subset_coord)){gates$subset_coord <- which(stay_coord[gates$subset_coord])}
+    print("---7")
+  })
 
   ##### Save data as fcs files
   shinyDirChoose(input, 'choose_dwn_folder_dp', roots = roots)
@@ -484,35 +545,18 @@ cytofBrowser_server <- function(input, output){
     )
   })
 
+  ### Implement subsetting data by gates it all data objects
   observeEvent(input$butt_subset_gating,{
     if(is.null(gates$gates)){return(NULL)}
     if(is.null(input$gates_to_subseting)){return(NULL)}
-    print("----START subsampling----")
     if(length(input$gates_to_subseting) == 1){stay_coord <- gates$gates[,input$gates_to_subseting]}
     if(length(input$gates_to_subseting) > 1){stay_coord <- apply(gates$gates[,input$gates_to_subseting], 1, any)}
-    print(head(gates$gates[,input$gates_to_subseting]))
-    print(stay_coord)
-    print(dim(fcs_data$exprs_data))
-    print(dim(fcs_data$cell_ann))
-    print(dim(gates$gates))
-    print(head(fcs_data$subset_coord))
-    print(head(gates$subset_coord))
     if(input$gates_subseting_orient == "exclude"){stay_coord <- !stay_coord}
-
-
-
     fcs_data$exprs_data <- fcs_data$exprs_data[stay_coord,]
     fcs_data$cell_ann <- fcs_data$cell_ann[stay_coord,]
     gates$gates <- gates$gates[stay_coord,]
     fcs_data$subset_coord <- which(stay_coord[as.integer(fcs_data$subset_coord)])
     gates$subset_coord <- which(stay_coord[gates$subset_coord])
-
-    print("did subsatting")
-    print(dim(fcs_data$exprs_data))
-    print(dim(fcs_data$cell_ann))
-    print(dim(gates$gates))
-    print(head(fcs_data$subset_coord))
-    print(head(gates$subset_coord))
   })
 
 
