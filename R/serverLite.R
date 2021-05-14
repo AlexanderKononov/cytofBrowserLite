@@ -147,39 +147,25 @@ cytofBrowser_server <- function(input, output){
       ## If subset was changed
       #if(any(c(data_prep_settings$sampling_size, data_prep_settings$fuse) != c(input$sampling_size, input$fuse))){
       #}
-      print("===1===")
       if(!is.null(input$sampling_size)){data_prep_settings$sampling_size <- input$sampling_size}
-      print("===2===")
       if(!is.null(input$fuse)){data_prep_settings$fuse <- input$fuse}
-      print("===3===")
-      print(head(fcs_data$cell_ann))
       fcs_data$subset_coord <- get_subset_coord(cell_ann = fcs_data$cell_ann,
                                                 sampling_size = data_prep_settings$sampling_size,
                                                 fuse = data_prep_settings$fuse,
                                                 size_fuse = data_prep_settings$size_fuse)
-      print("===4===")
       ## Repeat dimension reducing
       print("--Repeat dim redicing--")
       incProgress(1, detail = "Dimention redicing" )
       dim_reduce_force <- FALSE
       if(!is.null(input$method_plot_dp)){data_prep_settings$method <- input$method_plot_dp; dim_reduce_force <- TRUE}
-      print("===5===")
       if(!is.null(input$data_prep_perplexity)){data_prep_settings$perplexity <- input$data_prep_perplexity; dim_reduce_force <- TRUE}
-      print("===6===")
       if(!is.null(input$data_prep_theta)){data_prep_settings$theta <- input$data_prep_theta; dim_reduce_force <- TRUE}
-      print("===7===")
       if(!is.null(input$data_prep_max_iter)){data_prep_settings$max_iter <- input$data_prep_max_iter; dim_reduce_force <- TRUE}
-      print(head(fcs_data$exprs_data))
-      print(head(fcs_data$cell_ann))
-      print(head(fcs_data$cell_ann))
-      print(str(fcs_data$cell_ann))
       fcs_data$cell_ann <- get_dim_reduce(fcs_data$exprs_data, fcs_data$cell_ann,
                                           fcs_data$subset_coord, fcs_data$use_markers,force = dim_reduce_force,
                                           method = data_prep_settings$method, perplexity = data_prep_settings$perplexity,
                                           theta = data_prep_settings$theta, max_iter = data_prep_settings$max_iter,
                                           pca_param = FALSE, check_duplicates = FALSE, seed = 1234)
-      print("===9===")
-      print(head(fcs_data$cell_ann))
       incProgress(1, detail = "Plotting" )
     })
   })

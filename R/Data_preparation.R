@@ -136,7 +136,7 @@ get_fcs_panel <- function(fcs_raw){
 #'
 get_use_marker <- function(panel){
   use_markers <- as.character(panel$name[panel$marker_class == "type"])
-  names(use_markers) <- panel$antigen[panel$marker_class == "type"]
+  names(use_markers) <- paste(panel$antigen[panel$marker_class == "type"], use_markers,sep = "|")
   return(use_markers)
 }
 

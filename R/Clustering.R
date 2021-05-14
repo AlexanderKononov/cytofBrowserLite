@@ -16,6 +16,10 @@ get_som_from_row_data <- function(fcs_raw, clust_markers, seed = 1234){
   return(som)
 }
 
+### test
+# som <- get_som_from_row_data(fcs_raw, use_markers)
+
+
 ##### Get som object from flowSOM by exprs_data
 #' Get som object from flowSOM by expresion data
 #'
@@ -28,20 +32,9 @@ get_som_from_row_data <- function(fcs_raw, clust_markers, seed = 1234){
 #' @importFrom FlowSOM BuildSOM
 #'
 get_som <- function(exprs_data, fcs_raw, clust_markers, seed = 1234){
-
-  print("---print from get_som function--------------------------")
-  print("---1---")
-  print(fcs_raw)
-  print(str(fcs_raw))
   new_fcs <- fcs_raw[[1]]
-  print(str(new_fcs))
-  print("---2---")
   flowCore::exprs(new_fcs)<- exprs_data
-  print("---3---")
-  print("---new new_fcs ------")
-  print(str(new_fcs))
   fsom <- FlowSOM::ReadInput(new_fcs, transform = FALSE, scale = FALSE)
-  print("---4---")
   set.seed(seed)
   som <- FlowSOM::BuildSOM(fsom, colsToUse = clust_markers)
   return(som)
