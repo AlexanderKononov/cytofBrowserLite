@@ -17,24 +17,22 @@ knitr::opts_chunk$set(
 
 ## cytofBrowserLite
 
-The cytofBrowserLite is a lite version of cytofBrowser with reduced number of dependences and removed minor features.
+The cytofBrowserLite is a lite version of cytofBrowser with reduced number of dependences. This version will be maintained and upgraded..
 
 ## cytofBrowser
 
-The package focuses on analysis of CyTOF proteomic data by graphical interface. It is of the pipeline which starts from FCS files which you get from the CyTOF machine. It allows preprocessing and transforms the data then getting the specific cell populations by markers as well as clustering cells, estimate the abundance of cell populations and find the correlations and patterns by high-throughput hypothesis testing algorithm. CytofBrowser supplies the tool to visualize explore and interact with data on each step of the pipeline.
+The package focuses on analysis of CyTOF proteomic data by the easiest and fastest way.
+CytofBrowser allows you to starts from FCS files that you get from the CyTOF machine, preprocessing and transforms the data then getting the specific cell populations by markers as well as by clustering cells, estimate the abundance of cell populations, find the correlations and patterns by high-throughput hypothesis testing algorithm. CytofBrowser supplies the tool to visualize explore and interact with data on each step of the pipeline.
 ![picture](img/cytofBrowser_hallmarks.jpg)
 
 ## Graphical interface
 
-Despite that, there are functions available for interactive R session, it is assumed that cytofBrowser are run with a graphical interface as R Shiny app GUI.
+CytofBrowser has a user-friendly graphical interface. It developed as R Shiny app GUI.
 
-Since I have not devoted time to create detail documentation yet, I note the link to the video which I sent to my colleague and mentor to get the feedback. It can look redundantly detail or in an odd format. But there are enough explanations of work and examples of a graphical interface using. P.S. Don't judge my video skills strictly=)
-
-https://youtu.be/rWSD7y0Gaic
 
 ## Installation
 
-Presently you can instal the develop version of this programme:
+Presently you can install the develop version of this program:
 
 ``` r
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -48,7 +46,7 @@ devtools::install_github("AlexanderKononov/cytofBrowserLite")
 
 ## Run the cytofBrowser
 
-I assumed that this programme will be used with GUI as Shiny App.
+It assumed that this program will be used with GUI as Shiny App.
 
 ``` r
 cytofBrowser::cytofBrowserGUI()
@@ -75,3 +73,7 @@ or you can try to use the previous version of the package.
 lin <- "https://cran.r-project.org/src/contrib/Archive/shinyFiles/shinyFiles_0.7.5.tar.gz"
 install.packages(lin, repos=NULL, type="source")
 ```
+
+Since I have not devoted time to create detail documentation yet, I note the link to the video which I sent to my colleague and mentor to get the feedback. It can look redundantly detail or in an odd format. But there are enough explanations of work and examples of a graphical interface using. P.S. Don't judge my video skills strictly=)
+
+https://youtu.be/rWSD7y0Gaic
