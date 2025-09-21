@@ -1,0 +1,10 @@
+name: CytofBrowserLite
+title:
+username: varyomics
+account: varyomics
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3249555
+bundleId: 10932902
+url: https://varyomics.shinyapps.io/CytofBrowserLite/
+version: 1

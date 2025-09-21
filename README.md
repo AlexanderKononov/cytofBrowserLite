@@ -44,7 +44,7 @@ devtools::install_github("AlexanderKononov/cytofBrowserLite")
 It assumed that this program will be used with GUI as Shiny App.
 
 ``` r
-cytofBrowser::cytofBrowserGUI()
+cytofBrowserLite::cytofBrowserGUI()
 ```
 
 ## Troubleshooting

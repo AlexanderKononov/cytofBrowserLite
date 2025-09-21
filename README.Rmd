@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-![picture](img/interaction_logo1.jpg)
+![picture](man/figures/README-interaction_logo1.jpg)
 
 ## cytofBrowserLite
 
@@ -23,7 +23,7 @@ The cytofBrowserLite is a lite version of cytofBrowser with reduced number of de
 
 The package focuses on analysis of CyTOF proteomic data by the easiest and fastest way.
 CytofBrowser allows you to starts from FCS files that you get from the CyTOF machine, preprocessing and transforms the data then getting the specific cell populations by markers as well as by clustering cells, estimate the abundance of cell populations, find the correlations and patterns by high-throughput hypothesis testing algorithm. CytofBrowser supplies the tool to visualize explore and interact with data on each step of the pipeline.
-![picture](img/cytofBrowser_hallmarks.jpg)
+![picture](man/figures/README-cytofBrowser_hallmarks.jpg)
 
 ## Graphical interface
 
@@ -49,7 +49,7 @@ devtools::install_github("AlexanderKononov/cytofBrowserLite")
 It assumed that this program will be used with GUI as Shiny App.
 
 ``` r
-cytofBrowser::cytofBrowserGUI()
+cytofBrowserLite::cytofBrowserGUI()
 ```
 
 ## Troubleshooting
