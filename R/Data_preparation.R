@@ -351,28 +351,17 @@ get_cell_number <- function(fcs_raw){
 #' @return
 #'
 get_subset_coord <- function(cell_ann, sampling_size = 0.5, fuse = TRUE, size_fuse = 3000){
-  print("-1-")
   if(!("samples" %in% colnames(cell_ann))){print("samples info are not in cell_ann")}
   ## How many cells to sampling per-sample
-  print("-2-")
   smpl_cell_amount <- as.integer((table(cell_ann$samples) + 0.1) * sampling_size)
-  print(smpl_cell_amount)
-  print("-3-")
   if(fuse & (sum(smpl_cell_amount) > size_fuse)){
     smpl_cell_amount <- as.integer((smpl_cell_amount/sum(smpl_cell_amount))*size_fuse)}
-  print(smpl_cell_amount)
-  print("-4-")
   names(smpl_cell_amount) <- names(table(cell_ann$samples))
   ## Get subsample indices
   set.seed(1234)
-  print(smpl_cell_amount)
-  print("-5-")
   subset_coord <- unlist(lapply(names(smpl_cell_amount), function(i){
     sample(rownames(cell_ann[cell_ann$samples == i,]), smpl_cell_amount[i], replace = FALSE)}))
-  print(subset_coord)
-  print("-6-")
   subset_coord <- subset_coord[order(as.integer(subset_coord))]
-  print("-7-")
   return(subset_coord)
 }
 

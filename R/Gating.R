@@ -72,30 +72,17 @@ get_modif_sparse_data_gating <- function(gated_data_subset, mk = c("gating_mk1",
 #' @return
 get_size_subset_gating_data <- function(gated_data_subset, size_fuse = 10000,
                                         centers = 100, iter.max = 10){
-  print("---In function")
-  print("-1")
   if(size_fuse >= nrow(gated_data_subset)){return(1:nrow(gated_data_subset))}
   sampling_size <- size_fuse/nrow(gated_data_subset)
-  print(sampling_size)
-  print("-2")
   k_clust <- kmeans(gated_data_subset, centers = centers, iter.max = iter.max)
-  print(str(k_clust))
-  print("-3")
   k_portion <- as.integer((table(k_clust$cluster) + 0.1) * sampling_size)
-  print(k_portion)
-  print("-4")
   k_portion[k_portion < 30] <- table(k_clust$cluster)[k_portion < 30]
-  print("-5")
   names(k_portion) <- names(table(k_clust$cluster))
-  print("-6")
   ## Get subsample indices
   set.seed(1234)
   subset_coord <- unlist(lapply(names(k_portion), function(i){
     sample(which(k_clust$cluster == i), k_portion[i], replace = FALSE)}))
-  print("-7")
   subset_coord <- subset_coord[order(as.integer(subset_coord))]
-  print(str(subset_coord))
-  print("-8")
   return(subset_coord)
 }
 
@@ -125,8 +112,6 @@ get_cell_type_from_gates <- function(gates, gate_list, cell_annotation, method =
   if(any(grepl(new_name, colnames(new_cell_annotation)))){
     new_name <- paste0(new_name,"_",sum(grepl(new_name, colnames(new_cell_annotation)))+1)}
   if(!is.null(name_new_ann) & name_new_ann != ""){new_name <- name_new_ann}
-  print("new ann_ name=================")
-  print(new_name)
   colnames(new_cell_annotation)[colnames(new_cell_annotation) == "new_gate"] <- new_name
   return(new_cell_annotation)
 }

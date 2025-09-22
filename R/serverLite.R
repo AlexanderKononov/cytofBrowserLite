@@ -138,8 +138,6 @@ cytofBrowser_server <- function(input, output){
 
   ##### Rewrite for scatter plot
   observeEvent(input$redraw_dp, {
-    print(input$redraw_dp)
-    print(str(input$redraw_dp))
 
     withProgress(message = "Extraction data", min =0, max = 3, value = 0,{
       incProgress(1, detail = "Subsampling" )
@@ -255,8 +253,6 @@ cytofBrowser_server <- function(input, output){
   ##### First part of UI for subsetting data by annotation
   output$subset_dp_1ui <- renderUI({
     if(is.null(fcs_data$cell_ann)){return(NULL)}
-    print(head(fcs_data$cell_ann))
-    print(str(fcs_data$cell_ann))
     choices_set <- colnames(fcs_data$cell_ann)
     choices_set <- choices_set[!grepl("tSNE", choices_set)]
     choices_set <- choices_set[!grepl("UMAP", choices_set)]
@@ -292,29 +288,18 @@ cytofBrowser_server <- function(input, output){
     if(is.null(fcs_data$cell_ann)){return(NULL)}
     if(is.null(input$ann_to_subset)){return(NULL)}
     if(is.null(input$ann_groups_to_subset)){return(NULL)}
-    print("----Start subsetting-----")
-    print(input$redraw_dp)
-    print(str(input$redraw_dp))
 
-    print("---1")
     stay_coord <- fcs_data$cell_ann[,input$ann_to_subset] %in% input$ann_groups_to_subset
-    print("---2")
     if(input$subset_orient_dp == "exclude"){stay_coord <- !stay_coord}
-    print("---3")
     fcs_data$exprs_data <- fcs_data$exprs_data[stay_coord,]
-    print("---4")
     fcs_data$cell_ann <- fcs_data$cell_ann[stay_coord,]
-    print("---5")
     fcs_data$subset_coord <- which(stay_coord[as.integer(fcs_data$subset_coord)])
-    print("---6")
     if(!is.null(gates$gates)){
       new_gates <- as.data.frame(as.data.frame(gates$gates)[stay_coord,])
       colnames(new_gates) <- colnames(gates$gates)
       gates$gates <- as.data.frame(new_gates)
       }
-    print("---7")
     if(!is.null(gates$subset_coord)){gates$subset_coord <- which(stay_coord[gates$subset_coord])}
-    print("---7")
   })
 
   ##### Save data as fcs files
